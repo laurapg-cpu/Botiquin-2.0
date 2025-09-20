@@ -12,10 +12,11 @@
     .theme-aqua{--bg:#071418;--panel:#0b1d24;--sidebar:#08161b;--text:#e3f6fb;--muted:#98c0cc;--primary:#29b6f6;--accent:#22d3ee;--danger:#ef5350;--warning:#ffd54f;--success:#26c6da;--border:#12303a;--card:#0b1f27}
     .theme-amethyst{--bg:#0f0d14;--panel:#151225;--sidebar:#120f1f;--text:#efe9fb;--muted:#b7a7e6;--primary:#8b5cf6;--accent:#06b6d4;--danger:#f43f5e;--warning:#f59e0b;--success:#22c55e;--border:#231b3f;--card:#18132c}
     .theme-solar{--bg:#002b36;--panel:#073642;--sidebar:#05303a;--text:#eee8d5;--muted:#93a1a1;--primary:#b58900;--accent:#2aa198;--danger:#dc322f;--warning:#cb4b16;--success:#859900;--border:#0b3942;--card:#083440}
+
     *{box-sizing:border-box} html,body{height:100%} body{margin:0;background:var(--bg);color:var(--text);font:14px/1.5 system-ui,-apple-system,Segoe UI,Roboto,Ubuntu,Cantarell,Noto Sans,Arial}
     .app{display:grid;grid-template-columns:260px 1fr;height:100vh}
     .sidebar{background:var(--sidebar);border-right:1px solid var(--border);padding:16px 12px;overflow:auto}
-    .main{display:flex;flex-direction:column;background:var(--panel)}
+    .main{display:flex;flex-direction:column;background:var(--panel);min-width:0}
     .topbar{display:flex;align-items:center;gap:8px;padding:10px 14px;border-bottom:1px solid var(--border);position:sticky;top:0;background:var(--panel);z-index:5}
     .logo{display:flex;align-items:center;gap:10px;font-weight:700}
     .logo svg{width:26px;height:26px}
@@ -71,6 +72,31 @@
     .counter{font-size:12px;color:var(--muted)}
     .hint{color:var(--muted);font-size:12px}
     .drop-hint{border:1px dashed var(--border);border-radius:10px;padding:8px;text-align:center;color:var(--muted)}
+
+    /* ===== RESPONSIVE MÓVIL (sin scroll lateral) ===== */
+    html, body { overflow-x: hidden; }           /* no scroll horizontal */
+    .main { min-width: 0; }
+    @media (max-width: 960px){
+      .grid{ grid-template-columns: repeat(auto-fill, minmax(260px, 1fr)); }
+    }
+    @media (max-width: 720px){
+      .app{ grid-template-columns: 1fr; }        /* 1 sola columna */
+      .sidebar{
+        position: fixed; left: 0; top: 0; bottom: 0;
+        width: 88vw; max-width: 320px;
+        transform: translateX(-110%);
+        transition: transform .2s ease;
+        z-index: 100; overflow:auto;
+      }
+      .sidebar.open{ transform: translateX(0); }
+      .content{ padding: 12px; }
+      .search{ max-width: none; }
+    }
+    .backdrop{
+      position: fixed; inset: 0; background: rgba(0,0,0,.45);
+      display:none; z-index:90;
+    }
+    .backdrop.show{ display:block; }
   </style>
 </head>
 <body>
@@ -82,19 +108,15 @@
           <defs><linearGradient id="g1" x1="0" x2="1" y1="0" y2="1">
             <stop offset="0%" stop-color="var(--primary)"/><stop offset="100%" stop-color="var(--accent)"/>
           </linearGradient></defs>
-          <!-- tapa -->
           <rect x="20" y="10" width="24" height="8" rx="2" fill="url(#g1)"/>
-          <!-- cuello -->
           <rect x="24" y="18" width="16" height="6" rx="2" fill="url(#g1)" opacity=".8"/>
-          <!-- cuerpo -->
           <rect x="16" y="24" width="32" height="30" rx="8" fill="none" stroke="url(#g1)" stroke-width="3"/>
-          <!-- etiqueta con cruz -->
           <rect x="20" y="32" width="24" height="16" rx="4" fill="url(#g1)" opacity=".25"/>
           <path d="M30 36h4v-4h4v4h4v4h-4v4h-4v-4h-4z" fill="url(#g1)"/>
         </svg>
         <span class="brand">Botiquín</span>
       </div>
-            <div class="folders-header">
+      <div class="folders-header">
         <strong>Carpetas</strong>
         <div><button class="btn" id="btnNewFolder" title="Nueva carpeta">＋</button></div>
       </div>
@@ -109,9 +131,11 @@
         </div>
       </div>
     </aside>
-
-    <main class="main">
+        <main class="main">
       <div class="topbar">
+        <!-- Botón de menú (para abrir el sidebar en móvil) -->
+        <button class="btn" id="btnMenu" aria-label="Abrir menú">☰</button>
+
         <div class="pill" title="Selector de vista">
           <select id="viewSelect">
             <option value="cards">Vista tarjetas</option>
@@ -200,9 +224,7 @@
   <div class="modal" id="folderModal" role="dialog" aria-modal="true">
     <div class="dialog">
       <div class="hd">Carpeta <button class="btn" id="closeFolderModal">✕</button></div>
-      <div class="bd">
-        <div class="field"><label>Nombre</label><input id="folderName" placeholder="Ej. Antibióticos"/></div>
-      </div>
+      <div class="bd"><div class="field"><label>Nombre</label><input id="folderName" placeholder="Ej. Antibióticos"/></div></div>
       <div class="ft">
         <button class="btn" id="btnCancelFolder">Cancelar</button>
         <button class="btn primary" id="btnSaveFolder">Guardar</button>
@@ -222,460 +244,246 @@
   </div>
 
   <input type="file" id="fileInput" accept="application/json" style="display:none"/>
+  <!-- Backdrop para el drawer -->
+  <div id="backdrop" class="backdrop"></div>
     <script>
-  // ===== Utilidades =====
+  // ===== Helpers =====
   const $ = sel => document.querySelector(sel);
   const $$ = sel => Array.from(document.querySelectorAll(sel));
   const uid = (p='id') => p + '_' + Math.random().toString(36).slice(2,9);
-  const confirmBox = (msg) => window.confirm(msg);
+  const confirmBox = msg => window.confirm(msg);
 
-  // ===== Manifest + Icono (frasco de medicina dibujado por canvas) =====
+  // ===== Manifest + Icono (frasco dibujado por canvas) =====
   (function makeManifest(){
-    const sizes = [192, 512];
-    const icons = sizes.map(sz=>({ src: makeIconBottle(sz), sizes: sz+'x'+sz, type:'image/png', purpose:'any maskable' }));
-    const manifest = {
-      name: 'Botiquín · Gestor de Medicamentos',
-      short_name: 'Botiquín',
-      description: 'Gestor y biblioteca de medicamentos con recordatorios y fotos.',
-      start_url: '.',
-      scope: '.',
-      display: 'standalone',
-      background_color: getComputedStyle(document.documentElement).getPropertyValue('--panel').trim() || '#151925',
-      theme_color: getComputedStyle(document.documentElement).getPropertyValue('--panel').trim() || '#151925',
-      icons
-    };
-    const blob = new Blob([JSON.stringify(manifest)], {type:'application/json'});
-    const url = URL.createObjectURL(blob);
-    const link = document.createElement('link'); link.rel='manifest'; link.href=url; document.head.appendChild(link);
-
-    function makeIconBottle(size){
-      const c=document.createElement('canvas'); c.width=c.height=size; const ctx=c.getContext('2d');
-      // fondo
-      ctx.fillStyle = '#0f1115'; ctx.fillRect(0,0,size,size);
-      // sombra suave
-      ctx.shadowColor='rgba(0,0,0,0.25)'; ctx.shadowBlur=size*0.06; ctx.shadowOffsetY=size*0.02;
-      // tapa
-      roundRect(ctx, size*0.28, size*0.16, size*0.44, size*0.14, size*0.04); ctx.fillStyle='#5dd5c4'; ctx.fill();
-      // cuello
-      roundRect(ctx, size*0.34, size*0.28, size*0.32, size*0.08, size*0.04); ctx.fillStyle='#7ee6da'; ctx.fill();
-      // cuerpo del frasco
-      ctx.lineWidth = Math.max(2, size*0.04);
-      ctx.strokeStyle='#a78bfa'; ctx.fillStyle='rgba(167,139,250,0.10)';
-      roundRect(ctx, size*0.22, size*0.36, size*0.56, size*0.48, size*0.12); ctx.fill(); ctx.stroke();
-      // etiqueta
-      roundRect(ctx, size*0.30, size*0.46, size*0.40, size*0.20, size*0.08); ctx.fillStyle='rgba(93,213,196,0.25)'; ctx.fill();
-      // cruz en la etiqueta
-      ctx.fillStyle='#5dd5c4'; const w=size*0.08; const cx=size/2;
-      ctx.fillRect(cx-w/2, size*0.50, w, size*0.12);
-      ctx.fillRect(cx - size*0.06, size*0.55, size*0.12, w);
-      return c.toDataURL('image/png');
-
-      function roundRect(ctx,x,y,w,h,r){ctx.beginPath();ctx.moveTo(x+r,y);ctx.arcTo(x+w,y,x+w,y+h,r);ctx.arcTo(x+w,y+h,x,y+h,r);ctx.arcTo(x,y+h,x,y,r);ctx.arcTo(x,y,x+w,y,r);ctx.closePath();}
-    }
+    const sizes=[192,512];
+    const icons=sizes.map(s=>({src:makeIcon(s),sizes:s+'x'+s,type:'image/png',purpose:'any maskable'}));
+    const m={name:'Botiquín · Gestor de Medicamentos',short_name:'Botiquín',description:'Gestor y biblioteca de medicamentos con recordatorios y fotos.',start_url:'.',scope:'.',display:'standalone',background_color:getComputedStyle(document.documentElement).getPropertyValue('--panel').trim()||'#151925',theme_color:getComputedStyle(document.documentElement).getPropertyValue('--panel').trim()||'#151925',icons};
+    const url=URL.createObjectURL(new Blob([JSON.stringify(m)],{type:'application/json'}));
+    const link=document.createElement('link'); link.rel='manifest'; link.href=url; document.head.appendChild(link);
+    function makeIcon(size){const c=document.createElement('canvas'); c.width=c.height=size; const ctx=c.getContext('2d');
+      ctx.fillStyle='#0f1115'; ctx.fillRect(0,0,size,size);
+      ctx.shadowColor='rgba(0,0,0,.25)'; ctx.shadowBlur=size*0.06; ctx.shadowOffsetY=size*0.02;
+      rr(ctx,size*0.28,size*0.16,size*0.44,size*0.14,size*0.04); ctx.fillStyle='#5dd5c4'; ctx.fill();
+      rr(ctx,size*0.34,size*0.28,size*0.32,size*0.08,size*0.04); ctx.fillStyle='#7ee6da'; ctx.fill();
+      ctx.lineWidth=Math.max(2,size*0.04); ctx.strokeStyle='#a78bfa'; ctx.fillStyle='rgba(167,139,250,.10)';
+      rr(ctx,size*0.22,size*0.36,size*0.56,size*0.48,size*0.12); ctx.fill(); ctx.stroke();
+      rr(ctx,size*0.30,size*0.46,size*0.40,size*0.20,size*0.08); ctx.fillStyle='rgba(93,213,196,.25)'; ctx.fill();
+      ctx.fillStyle='#5dd5c4'; const w=size*0.08, cx=size/2; ctx.fillRect(cx-w/2,size*0.50,w,size*0.12); ctx.fillRect(cx-size*0.06,size*0.55,size*0.12,w);
+      function rr(ctx,x,y,w,h,r){ctx.beginPath();ctx.moveTo(x+r,y);ctx.arcTo(x+w,y,x+w,y+h,r);ctx.arcTo(x+w,y+h,x,y+h,r);ctx.arcTo(x,y+h,x,y,r);ctx.arcTo(x,y,x+w,y,r);ctx.closePath();}
+      return c.toDataURL('image/png');}
   })();
 
-  // ===== Service Worker (PWA) =====
+  // ===== Service Worker =====
   (async function registerSW(){
     if(!('serviceWorker' in navigator)) return;
     try{
-      const swCode = `
-        const CACHE='botiquin-cache-v3';
-        self.addEventListener('install',e=>{e.waitUntil(caches.open(CACHE).then(c=>c.addAll(['./']))) });
-        self.addEventListener('activate',e=>{e.waitUntil(caches.keys().then(keys=>Promise.all(keys.filter(k=>k!==CACHE).map(k=>caches.delete(k))))) });
-        self.addEventListener('fetch',event=>{
-          const req = event.request;
-          if(req.method!=='GET' || new URL(req.url).origin !== self.location.origin){ return; }
-          event.respondWith(
-            caches.match(req).then(res=> res || fetch(req).then(r=>{ const clone=r.clone(); caches.open(CACHE).then(c=>c.put(req, clone)); return r; }).catch(()=>caches.match('./')))
-          );
-        });
-      `;
-      const blob = new Blob([swCode], {type:'text/javascript'});
-      const url = URL.createObjectURL(blob);
-      const reg = await navigator.serviceWorker.register(url);
-      // Fuerza actualización si ya había uno viejo
-      if (reg.waiting) reg.waiting.postMessage({type:'SKIP_WAITING'});
-      console.log('SW registrado');
-    }catch(err){ console.warn('No se pudo registrar el SW (usa HTTPS o localhost).', err); }
+      const swCode=`const CACHE='botiquin-cache-v4';
+self.addEventListener('install',e=>{e.waitUntil(caches.open(CACHE).then(c=>c.addAll(['./'])))});
+self.addEventListener('activate',e=>{e.waitUntil(caches.keys().then(keys=>Promise.all(keys.filter(k=>k!==CACHE).map(k=>caches.delete(k)))))});
+self.addEventListener('fetch',event=>{
+  const req=event.request;
+  if(req.method!=='GET' || new URL(req.url).origin!==self.location.origin) return;
+  event.respondWith(caches.match(req).then(r=>r||fetch(req).then(x=>{const cl=x.clone(); caches.open(CACHE).then(c=>c.put(req,cl)); return x;}).catch(()=>caches.match('./'))));
+});`;
+      const url=URL.createObjectURL(new Blob([swCode],{type:'text/javascript'}));
+      await navigator.serviceWorker.register(url);
+    }catch(e){ console.warn('SW no disponible', e); }
   })();
 
   if(location.protocol!=='https:' && location.hostname!=='localhost'){
-    setTimeout(()=> toast('Para instalar como PWA: usa HTTPS (GitHub Pages) o localhost.'), 800);
+    setTimeout(()=> toast('Para instalar como PWA: usa HTTPS (GitHub Pages) o localhost.'), 600);
   }
 
-  // ===== Estado / Persistencia =====
-  const STORAGE_KEY = 'botiquin.v2';
-  let state = {
-    folders: [ { id:'all', name:'Todos', order:0 } ],
-    meds: [],
-    trash: { meds:[], folders:[] },
-    view: 'cards', sort: 'name', theme: 'dark', activeFolder: 'all',
-    selectMode: false, selected: new Set(), lastSaved: Date.now()
+  // ===== Estado y persistencia =====
+  const STORAGE_KEY='botiquin.v2';
+  let state={
+    folders:[{id:'all',name:'Todos',order:0}],
+    meds:[],
+    trash:{meds:[],folders:[]},
+    view:'cards', sort:'name', theme:'dark', activeFolder:'all',
+    selectMode:false, selected:new Set(), lastSaved:Date.now()
   };
-  const history = {
-    undo:[], redo:[],
-    push(){ this.undo.push(JSON.stringify(state)); if(this.undo.length>50) this.undo.shift(); this.redo.length=0; },
+  const history={undo:[],redo:[],push(){this.undo.push(JSON.stringify(state)); if(this.undo.length>50) this.undo.shift(); this.redo.length=0;},
     canUndo(){return this.undo.length>0}, canRedo(){return this.redo.length>0},
-    doUndo(){ if(!this.canUndo()) return; this.redo.push(JSON.stringify(state)); state = JSON.parse(this.undo.pop()); state.selected=new Set(state.selected||[]); renderAll(); save(); },
-    doRedo(){ if(!this.canRedo()) return; this.undo.push(JSON.stringify(state)); state = JSON.parse(this.redo.pop()); state.selected=new Set(state.selected||[]); renderAll(); save(); }
+    doUndo(){if(!this.canUndo())return; this.redo.push(JSON.stringify(state)); state=JSON.parse(this.undo.pop()); state.selected=new Set(state.selected||[]); renderAll(); save();},
+    doRedo(){if(!this.canRedo())return; this.undo.push(JSON.stringify(state)); state=JSON.parse(this.redo.pop()); state.selected=new Set(state.selected||[]); renderAll(); save();}
   };
-  function load(){ const raw=localStorage.getItem(STORAGE_KEY); if(raw){ try{ state=JSON.parse(raw); state.selected=new Set(state.selected||[]);}catch{} } applyTheme(state.theme); }
-  function save(){ state.lastSaved = Date.now(); localStorage.setItem(STORAGE_KEY, JSON.stringify({...state, selected:[...state.selected]})); }
+  function load(){const raw=localStorage.getItem(STORAGE_KEY); if(raw){try{state=JSON.parse(raw); state.selected=new Set(state.selected||[]);}catch{}} applyTheme(state.theme);}
+  function save(){state.lastSaved=Date.now(); localStorage.setItem(STORAGE_KEY, JSON.stringify({...state, selected:[...state.selected]}));}
 
   // ===== Temas =====
-  const THEMES = ['dark','light','olive','aqua','amethyst','solar'];
-  function applyTheme(name){
-    document.body.classList.remove(...THEMES.map(t=>'theme-'+t));
-    if(name!=='dark') document.body.classList.add('theme-'+name);
-    state.theme=name; save();
-    const m = document.querySelector('meta[name="theme-color"]'); if(m){ m.setAttribute('content', getComputedStyle(document.documentElement).getPropertyValue('--panel').trim()); }
-  }
+  const THEMES=['dark','light','olive','aqua','amethyst','solar'];
+  function applyTheme(name){document.body.classList.remove(...THEMES.map(t=>'theme-'+t)); if(name!=='dark') document.body.classList.add('theme-'+name); state.theme=name; save(); const m=document.querySelector('meta[name="theme-color"]'); if(m) m.setAttribute('content', getComputedStyle(document.documentElement).getPropertyValue('--panel').trim());}
 
   // ===== Carpetas =====
-  function addFolder(name){ history.push(); const id=uid('fld'); state.folders.push({id,name,order:Date.now()}); save(); renderFolders(); renderAll(); return id; }
-  function updateFolder(id, name){ history.push(); const f=state.folders.find(x=>x.id===id); if(f){ f.name=name; save(); renderFolders(); renderAll(); } }
-  function deleteFolder(id){
-    if(id==='all') return;
-    if(!confirmBox('¿Eliminar carpeta y mover medicamentos a "Todos"?')) return;
-    history.push();
-    state.trash.folders.push(state.folders.find(f=>f.id===id));
-    state.folders = state.folders.filter(f=>f.id!==id);
-    state.meds.forEach(m=>{ if(m.folderId===id) m.folderId='all'; });
-    save(); renderFolders(); renderAll();
-  }
-
-  // d&d carpetas / soltar meds encima
-  let draggingFolderId = null;
-  function renderFolders(){
-    const list = $('#folderList'); list.innerHTML='';
-    state.folders.sort((a,b)=> (a.id==='all')? -1 : (b.id==='all')? 1 : a.order-b.order);
-    state.folders.forEach(f=>{
-      const el = document.createElement('div'); el.className='folder'+(f.id===state.activeFolder?' active':''); el.draggable = f.id!=='all'; el.dataset.id=f.id;
-      el.innerHTML = `<span class="folder-name">${f.name}</span>
-        <div class="folder-actions">
-          ${f.id!=='all'?'<button class="btn btnFolderRename" title="Renombrar">✎</button>':''}
-          ${f.id!=='all'?'<button class="btn btnFolderDelete" title="Eliminar">🗑</button>':''}
-        </div>`;
-      el.addEventListener('click', (e)=>{ if(e.target.closest('.btn')) return; state.activeFolder=f.id; renderAll(); save(); });
-      if(f.id!=='all'){
-        el.addEventListener('dragstart',()=>{ draggingFolderId=f.id; el.style.opacity=.5; });
-        el.addEventListener('dragend',()=>{ draggingFolderId=null; el.style.opacity=1; });
-        el.addEventListener('dragover',(e)=>{ e.preventDefault(); el.style.outline='2px dashed var(--primary)'; });
-        el.addEventListener('dragleave',()=>{ el.style.outline=''; });
-        el.addEventListener('drop',()=>{ el.style.outline=''; history.push(); const src=state.folders.find(x=>x.id===draggingFolderId); const dst=state.folders.find(x=>x.id===f.id); if(src&&dst&&src.id!==dst.id){ src.order=dst.order-1; save(); renderFolders(); } });
-      }
-      el.addEventListener('dragover',(e)=>{ e.preventDefault(); });
-      el.addEventListener('drop',(e)=>{ const ids=(e.dataTransfer?.getData('text/med-ids')||'').split(',').filter(Boolean); if(!ids.length) return; history.push(); ids.forEach(id=>{ const m=state.meds.find(x=>x.id===id); if(m) m.folderId=f.id; }); save(); renderAll(); });
+  function addFolder(name){history.push(); const id=uid('fld'); state.folders.push({id,name,order:Date.now()}); save(); renderFolders(); renderAll(); return id;}
+  function updateFolder(id,name){history.push(); const f=state.folders.find(x=>x.id===id); if(f){f.name=name; save(); renderFolders(); renderAll();}}
+  function deleteFolder(id){if(id==='all') return; if(!confirmBox('¿Eliminar carpeta y mover medicamentos a "Todos"?')) return; history.push(); state.trash.folders.push(state.folders.find(f=>f.id===id)); state.folders=state.folders.filter(f=>f.id!==id); state.meds.forEach(m=>{if(m.folderId===id) m.folderId='all';}); save(); renderFolders(); renderAll();}
+  let draggingFolderId=null;
+  function renderFolders(){const list=$('#folderList'); list.innerHTML=''; state.folders.sort((a,b)=> (a.id==='all')?-1:(b.id==='all')?1:a.order-b.order);
+    state.folders.forEach(f=>{const el=document.createElement('div'); el.className='folder'+(f.id===state.activeFolder?' active':''); el.draggable=f.id!=='all'; el.dataset.id=f.id;
+      el.innerHTML=`<span class="folder-name">${f.name}</span><div class="folder-actions">${f.id!=='all'?'<button class="btn btnFolderRename" title="Renombrar">✎</button>':''}${f.id!=='all'?'<button class="btn btnFolderDelete" title="Eliminar">🗑</button>':''}</div>`;
+      el.addEventListener('click',e=>{if(e.target.closest('.btn')) return; state.activeFolder=f.id; renderAll(); save();});
+      if(f.id!=='all'){el.addEventListener('dragstart',()=>{draggingFolderId=f.id; el.style.opacity=.5;}); el.addEventListener('dragend',()=>{draggingFolderId=null; el.style.opacity=1;});
+        el.addEventListener('dragover',e=>{e.preventDefault(); el.style.outline='2px dashed var(--primary)';});
+        el.addEventListener('dragleave',()=>{el.style.outline='';});
+        el.addEventListener('drop',()=>{el.style.outline=''; history.push(); const src=state.folders.find(x=>x.id===draggingFolderId); const dst=state.folders.find(x=>x.id===f.id); if(src&&dst&&src.id!==dst.id){src.order=dst.order-1; save(); renderFolders();}});}
+      el.addEventListener('dragover',e=>e.preventDefault());
+      el.addEventListener('drop',e=>{const ids=(e.dataTransfer?.getData('text/med-ids')||'').split(',').filter(Boolean); if(!ids.length) return; history.push(); ids.forEach(id=>{const m=state.meds.find(x=>x.id===id); if(m) m.folderId=f.id;}); save(); renderAll();});
       list.appendChild(el);
     });
   }
 
   // ===== Medicamentos =====
-  let editingMedId = null;
-  function newMed(){ editingMedId = null; openMedModal(); }
-  function editMed(id){ editingMedId = id; openMedModal(id); }
-  function duplicateMed(id){ const src=state.meds.find(m=>m.id===id); if(!src) return; history.push(); const copy={...src, id:uid('med'), name:src.name+' (copia)', created:Date.now(), updated:Date.now()}; state.meds.push(copy); save(); renderAll(); }
-  function removeMed(id){ history.push(); const m=state.meds.find(x=>x.id===id); if(!m) return; state.trash.meds.push(m); state.meds=state.meds.filter(x=>x.id!==id); save(); renderAll(); }
-  function removeSelected(){
-    if(!state.selected.size) return;
-    if(!confirmBox(`¿Eliminar ${state.selected.size} seleccionados?`)) return;
-    history.push();
-    const ids=[...state.selected];
-    ids.forEach(id=>{ const m=state.meds.find(x=>x.id===id); if(m){ state.trash.meds.push(m); }});
-    state.meds=state.meds.filter(m=>!state.selected.has(m.id)); state.selected.clear(); save(); renderAll();
-  }
-  function setArchived(id,flag=true){ history.push(); const m=state.meds.find(x=>x.id===id); if(m){ m.archived=!!flag; m.updated=Date.now(); save(); renderAll(); } }
-
-  function attachCardDrag(el, id){
-    el.draggable=true;
-    el.addEventListener('dragstart', (e)=>{ const ids = state.selectMode && state.selected.size ? [...state.selected] : [id]; e.dataTransfer.setData('text/med-ids', ids.join(',')); el.classList.add('dragging'); });
-    el.addEventListener('dragend', ()=> el.classList.remove('dragging'));
-    // arrastrar fotos a la tarjeta
-    el.addEventListener('dragover', (e)=>{ if([...e.dataTransfer.items].some(i=>i.kind==='file')){ e.preventDefault(); el.style.outline='2px dashed var(--primary)'; } });
-    el.addEventListener('dragleave', ()=> el.style.outline='');
-    el.addEventListener('drop', async (e)=>{ if(![...e.dataTransfer.items].some(i=>i.kind==='file')) return; e.preventDefault(); el.style.outline=''; const files=[...e.dataTransfer.files].filter(f=>f.type.startsWith('image/')); if(!files.length) return; history.push(); const m=state.meds.find(x=>x.id===id); if(!m) return; m.photos = m.photos||[]; for(const f of files){ const data = await fileToResizedDataURL(f, 1200); m.photos.push(data); } m.updated=Date.now(); save(); renderAll(); });
+  let editingMedId=null;
+  function newMed(){editingMedId=null; openMedModal();}
+  function editMed(id){editingMedId=id; openMedModal(id);}
+  function duplicateMed(id){const src=state.meds.find(m=>m.id===id); if(!src) return; history.push(); const copy={...src,id:uid('med'),name:src.name+' (copia)',created:Date.now(),updated:Date.now()}; state.meds.push(copy); save(); renderAll();}
+  function removeMed(id){history.push(); const m=state.meds.find(x=>x.id===id); if(!m) return; state.trash.meds.push(m); state.meds=state.meds.filter(x=>x.id!==id); save(); renderAll();}
+  function removeSelected(){if(!state.selected.size) return; if(!confirmBox(`¿Eliminar ${state.selected.size} seleccionados?`)) return; history.push(); const ids=[...state.selected]; ids.forEach(id=>{const m=state.meds.find(x=>x.id===id); if(m) state.trash.meds.push(m);}); state.meds=state.meds.filter(m=>!state.selected.has(m.id)); state.selected.clear(); save(); renderAll();}
+  function setArchived(id,flag=true){history.push(); const m=state.meds.find(x=>x.id===id); if(m){m.archived=!!flag; m.updated=Date.now(); save(); renderAll();}}
+  function attachCardDrag(el,id){el.draggable=true;
+    el.addEventListener('dragstart',e=>{const ids=state.selectMode&&state.selected.size?[...state.selected]:[id]; e.dataTransfer.setData('text/med-ids',ids.join(',')); el.classList.add('dragging');});
+    el.addEventListener('dragend',()=>el.classList.remove('dragging'));
+    el.addEventListener('dragover',e=>{if([...e.dataTransfer.items].some(i=>i.kind==='file')){e.preventDefault(); el.style.outline='2px dashed var(--primary)';}});
+    el.addEventListener('dragleave',()=>el.style.outline='');
+    el.addEventListener('drop',async e=>{if(![...e.dataTransfer.items].some(i=>i.kind==='file')) return; e.preventDefault(); el.style.outline=''; const files=[...e.dataTransfer.files].filter(f=>f.type.startsWith('image/')); if(!files.length) return; history.push(); const m=state.meds.find(x=>x.id===id); if(!m) return; m.photos=m.photos||[]; for(const f of files){const data=await fileToResizedDataURL(f,1200); m.photos.push(data);} m.updated=Date.now(); save(); renderAll();});
   }
 
   // ===== Render =====
-  function currentMeds(){
-    let meds = state.meds.filter(m=>!m.archived);
-    if(state.activeFolder!=='all') meds = meds.filter(m=>m.folderId===state.activeFolder);
-    const q=$('#searchInput').value.trim().toLowerCase();
-    if(q) meds = meds.filter(m=> (m.name+' '+(m.dose||'')+' '+(m.person||'')).toLowerCase().includes(q));
-    meds.sort((a,b)=>{
-      switch(state.sort){
-        case 'person': return (a.person||'').localeCompare(b.person||'') || a.name.localeCompare(b.name);
-        case 'updated': return (b.updated||0) - (a.updated||0);
-        case 'nextDose': return (a.nextDose||Infinity) - (b.nextDose||Infinity);
-        default: return a.name.localeCompare(b.name);
-      }
-    });
-    return meds;
-  }
-
-  function renderAll(){
-    renderFolders(); renderBreadcrumb();
-    if(state.view==='cards'){ renderCards(); $('#cardsView').style.display='grid'; $('#tableView').style.display='none'; }
-    else { renderTable(); $('#cardsView').style.display='none'; $('#tableView').style.display='block'; }
-    updateSelectionUI(); updateUndoRedoUI(); populateFolderSelect();
-  }
-  function renderBreadcrumb(){ const f=state.folders.find(x=>x.id===state.activeFolder); $('#breadcrumb').textContent = `Carpeta: ${f?f.name:'(desconocida)'} • ${currentMeds().length} elementos`; }
-
-  function renderCards(){
-    const wrap=$('#cardsView'); wrap.innerHTML=''; const meds=currentMeds();
-    meds.forEach(m=>{
-      const card=document.createElement('div'); card.className='card'+(state.selectMode?' select-mode':''); card.dataset.id=m.id;
-      attachCardDrag(card, m.id);
-      card.addEventListener('dblclick', ()=> editMed(m.id));
-      const checked=state.selected.has(m.id);
-      const photos=(m.photos||[]).slice(0,4).map(src=>`<span class="thumb"><img src="${src}" alt="foto"/></span>`).join('');
-      card.innerHTML=`
+  function currentMeds(){let meds=state.meds.filter(m=>!m.archived); if(state.activeFolder!=='all') meds=meds.filter(m=>m.folderId===state.activeFolder); const q=$('#searchInput').value.trim().toLowerCase(); if(q) meds=meds.filter(m=>(m.name+' '+(m.dose||'')+' '+(m.person||'')).toLowerCase().includes(q)); meds.sort((a,b)=>{switch(state.sort){case'person':return (a.person||'').localeCompare(b.person||'')||a.name.localeCompare(b.name);case'updated':return (b.updated||0)-(a.updated||0);case'nextDose':return (a.nextDose||Infinity)-(b.nextDose||Infinity);default:return a.name.localeCompare(b.name);}}); return meds;}
+  function renderAll(){renderFolders(); renderBreadcrumb(); if(state.view==='cards'){renderCards(); $('#cardsView').style.display='grid'; $('#tableView').style.display='none';} else {renderTable(); $('#cardsView').style.display='none'; $('#tableView').style.display='block';} updateSelectionUI(); updateUndoRedoUI(); populateFolderSelect();}
+  function renderBreadcrumb(){const f=state.folders.find(x=>x.id===state.activeFolder); $('#breadcrumb').textContent=`Carpeta: ${f?f.name:'(desconocida)'} • ${currentMeds().length} elementos`;}
+  function renderCards(){const wrap=$('#cardsView'); wrap.innerHTML=''; currentMeds().forEach(m=>{const card=document.createElement('div'); card.className='card'+(state.selectMode?' select-mode':''); card.dataset.id=m.id; attachCardDrag(card,m.id); card.addEventListener('dblclick',()=>editMed(m.id)); const checked=state.selected.has(m.id); const photos=(m.photos||[]).slice(0,4).map(src=>`<span class="thumb"><img src="${src}" alt="foto"/></span>`).join(''); card.innerHTML=`
         <div class="card-header">
           <label class="checkbox"><input type="checkbox" ${checked?'checked':''} data-sel="${m.id}"></label>
           <div class="title" title="${m.name}">${m.name}</div>
           <div class="person" title="Persona asignada">${m.person||'—'}</div>
         </div>
         ${photos?`<div class="photos">${photos}</div>`:''}
-        <div class="desc">${(m.desc||'—')}</div>
+        <div class="desc">${m.desc||'—'}</div>
         <div class="meta">
-          <span class="tag" title="Frecuencia / Posología">${m.dose||'—'}</span>
+          <span class="tag">${m.dose||'—'}</span>
           ${m.tags?.includes('urgente')?'<span class="tag" style="border-color:var(--danger);color:var(--danger)">Urgente</span>':''}
           ${m.tags?.includes('cronico')?'<span class="tag" style="border-color:var(--warning);color:var(--warning)">Crónico</span>':''}
           ${m.tags?.includes('prueba')?'<span class="tag" style="border-color:var(--accent);color:var(--accent)">En prueba</span>':''}
-          ${m.nextDose?`<span class="tag" title="Próxima toma">⏰ ${new Date(m.nextDose).toLocaleString()}</span>`:''}
+          ${m.nextDose?`<span class="tag">⏰ ${new Date(m.nextDose).toLocaleString()}</span>`:''}
         </div>
         <div class="row">
           <select data-move="${m.id}" title="Mover a carpeta">
             ${state.folders.map(f=>`<option value="${f.id}" ${m.folderId===f.id?'selected':''}>${f.name}</option>`).join('')}
           </select>
           <span class="spacer"></span>
-          <button class="btn" data-copy="${m.id}" title="Copiar información">Copiar</button>
-          <button class="btn" data-dup="${m.id}" title="Duplicar">Duplicar</button>
-          <button class="btn danger" data-del="${m.id}" title="Eliminar">🗑</button>
-        </div>`;
-      wrap.appendChild(card);
-    });
-  }
-
-  function renderTable(){
-    const meds=currentMeds(); const tableWrap=$('#tableView');
-    const rows=meds.map(m=>`<tr data-id="${m.id}">
+          <button class="btn" data-copy="${m.id}">Copiar</button>
+          <button class="btn" data-dup="${m.id}">Duplicar</button>
+          <button class="btn danger" data-del="${m.id}">🗑</button>
+        </div>`; wrap.appendChild(card);});}
+  function renderTable(){const meds=currentMeds(); const wrap=$('#tableView'); const rows=meds.map(m=>`<tr data-id="${m.id}">
       <td><label class="checkbox ${state.selectMode?'':'" style=\\"display:none\\"'}"><input type="checkbox" ${state.selected.has(m.id)?'checked':''} data-sel="${m.id}"></label></td>
-      <td>${m.name}</td><td>${m.dose||'—'}</td><td>${m.person||'—'}</td><td>${m.desc||'—'}</td>
-      <td>${m.nextDose?new Date(m.nextDose).toLocaleString():'—'}</td>
+      <td>${m.name}</td><td>${m.dose||'—'}</td><td>${m.person||'—'}</td><td>${m.desc||'—'}</td><td>${m.nextDose?new Date(m.nextDose).toLocaleString():'—'}</td>
       <td><button class="btn" data-copy="${m.id}">Copiar</button> <button class="btn" data-dup="${m.id}">Duplicar</button> <button class="btn danger" data-del="${m.id}">Eliminar</button></td>
-    </tr>`).join('');
-    tableWrap.innerHTML = `<table class="table"><thead><tr><th></th><th>Nombre</th><th>Frecuencia</th><th>Persona</th><th>Descripción</th><th>Próxima toma</th><th>Acciones</th></tr></thead><tbody>${rows}</tbody></table>`;
-    tableWrap.querySelectorAll('tr[data-id]').forEach(tr=> tr.addEventListener('dblclick', ()=> editMed(tr.dataset.id)));
-  }
-
-  function updateSelectionUI(){
-    document.body.classList.toggle('select-mode', state.selectMode);
-    $('#btnDeleteSelected').disabled = state.selected.size===0;
-    $('#selectedCount').textContent = `${state.selected.size} seleccionados`;
-    $('#btnSelectMode').textContent = state.selectMode? 'Salir selección' : 'Seleccionar';
-  }
-  function updateUndoRedoUI(){ $('#btnUndo').disabled = !history.canUndo(); $('#btnRedo').disabled = !history.canRedo(); }
+    </tr>`).join(''); wrap.innerHTML=`<table class="table"><thead><tr><th></th><th>Nombre</th><th>Frecuencia</th><th>Persona</th><th>Descripción</th><th>Próxima toma</th><th>Acciones</th></tr></thead><tbody>${rows}</tbody></table>`; wrap.querySelectorAll('tr[data-id]').forEach(tr=>tr.addEventListener('dblclick',()=>editMed(tr.dataset.id)));}
+  function updateSelectionUI(){document.body.classList.toggle('select-mode',state.selectMode); $('#btnDeleteSelected').disabled=state.selected.size===0; $('#selectedCount').textContent=`${state.selected.size} seleccionados`; $('#btnSelectMode').textContent=state.selectMode?'Salir selección':'Seleccionar';}
+  function updateUndoRedoUI(){$('#btnUndo').disabled=!history.canUndo(); $('#btnRedo').disabled=!history.canRedo();}
 
   // ===== Eventos =====
   function bindEvents(){
-    $('#btnTheme').addEventListener('click', ()=>{ const idx=THEMES.indexOf(state.theme); const next=THEMES[(idx+1)%THEMES.length]; applyTheme(next); });
-    $('#btnNewMed').addEventListener('click', newMed);
-    $('#btnNewFolder').addEventListener('click', ()=> openFolderModal());
-    $('#btnDeleteSelected').addEventListener('click', removeSelected);
-    $('#btnSelectMode').addEventListener('click', ()=>{ state.selectMode=!state.selectMode; if(!state.selectMode) state.selected.clear(); renderAll(); save(); });
-    $('#btnUndo').addEventListener('click', ()=> history.doUndo());
-    $('#btnRedo').addEventListener('click', ()=> history.doRedo());
-    $('#btnExport').addEventListener('click', doExport);
-    $('#btnImport').addEventListener('click', ()=> $('#fileInput').click());
-    $('#fileInput').addEventListener('change', handleImport);
-    $('#btnNotify').addEventListener('click', enableNotifications);
-    $('#btnTrash').addEventListener('click', openTrashModal);
-    $('#btnEmptyTrash').addEventListener('click', ()=>{ if(confirmBox('¿Vaciar por completo la papelera?')){ history.push(); state.trash.meds=[]; state.trash.folders=[]; save(); }});
+    $('#btnTheme').addEventListener('click',()=>{const i=THEMES.indexOf(state.theme); const next=THEMES[(i+1)%THEMES.length]; applyTheme(next);});
+    $('#btnNewMed').addEventListener('click',newMed);
+    $('#btnNewFolder').addEventListener('click',()=>openFolderModal());
+    $('#btnDeleteSelected').addEventListener('click',removeSelected);
+    $('#btnSelectMode').addEventListener('click',()=>{state.selectMode=!state.selectMode; if(!state.selectMode) state.selected.clear(); renderAll(); save();});
+    $('#btnUndo').addEventListener('click',()=>history.doUndo());
+    $('#btnRedo').addEventListener('click',()=>history.doRedo());
+    $('#btnExport').addEventListener('click',doExport);
+    $('#btnImport').addEventListener('click',()=>$('#fileInput').click());
+    $('#fileInput').addEventListener('change',handleImport);
+    $('#btnNotify').addEventListener('click',enableNotifications);
+    $('#btnTrash').addEventListener('click',openTrashModal);
+    $('#btnEmptyTrash').addEventListener('click',()=>{if(confirmBox('¿Vaciar por completo la papelera?')){history.push(); state.trash.meds=[]; state.trash.folders=[]; save();}});
+    $('#searchInput').addEventListener('input',()=>renderAll());
+    $('#viewSelect').addEventListener('change',e=>{state.view=e.target.value; save(); renderAll();});
+    $('#sortSelect').addEventListener('change',e=>{state.sort=e.target.value; save(); renderAll();});
 
-    $('#searchInput').addEventListener('input', ()=> renderAll());
-    $('#viewSelect').addEventListener('change', (e)=>{ state.view=e.target.value; save(); renderAll(); });
-    $('#sortSelect').addEventListener('change', (e)=>{ state.sort=e.target.value; save(); renderAll(); });
-
-    document.addEventListener('keydown', (e)=>{
-      if((e.ctrlKey||e.metaKey) && e.key.toLowerCase()==='z'){ e.preventDefault(); if(e.shiftKey){ history.doRedo(); } else { history.doUndo(); } }
-      if((e.ctrlKey||e.metaKey) && e.key.toLowerCase()==='y'){ e.preventDefault(); history.doRedo(); }
-      if((e.ctrlKey||e.metaKey) && e.key.toLowerCase()==='a'){ if(state.selectMode){ e.preventDefault(); currentMeds().forEach(m=> state.selected.add(m.id)); renderAll(); } }
-      if(e.key==='Escape'){ if(state.selectMode){ state.selected.clear(); renderAll(); } }
+    document.addEventListener('keydown',e=>{
+      if((e.ctrlKey||e.metaKey)&&e.key.toLowerCase()==='z'){e.preventDefault(); if(e.shiftKey)history.doRedo(); else history.doUndo();}
+      if((e.ctrlKey||e.metaKey)&&e.key.toLowerCase()==='y'){e.preventDefault(); history.doRedo();}
+      if((e.ctrlKey||e.metaKey)&&e.key.toLowerCase()==='a'){if(state.selectMode){e.preventDefault(); currentMeds().forEach(m=>state.selected.add(m.id)); renderAll();}}
+      if(e.key==='Escape'){ if(state.selectMode){state.selected.clear(); renderAll();} closeSidebar(); }
     });
 
-    document.body.addEventListener('change', (e)=>{
-      const sel=e.target.getAttribute('data-sel'); if(sel){ if(e.target.checked) state.selected.add(sel); else state.selected.delete(sel); updateSelectionUI(); save(); }
-      const move=e.target.getAttribute('data-move'); if(move){ history.push(); const m=state.meds.find(x=>x.id===move); if(m){ m.folderId=e.target.value; m.updated=Date.now(); save(); } }
+    document.body.addEventListener('change',e=>{
+      const sel=e.target.getAttribute('data-sel'); if(sel){if(e.target.checked) state.selected.add(sel); else state.selected.delete(sel); updateSelectionUI(); save();}
+      const move=e.target.getAttribute('data-move'); if(move){history.push(); const m=state.meds.find(x=>x.id===move); if(m){m.folderId=e.target.value; m.updated=Date.now(); save();}}
     });
 
-    document.body.addEventListener('click', (e)=>{
-      const idCopy=e.target.getAttribute('data-copy'); if(idCopy){ copyMed(idCopy); }
-      const idDup=e.target.getAttribute('data-dup'); if(idDup){ duplicateMed(idDup); }
-      const idDel=e.target.getAttribute('data-del'); if(idDel){ if(confirmBox('¿Eliminar este medicamento?')) removeMed(idDel); }
-      const rnBtn=e.target.closest('.btnFolderRename'); if(rnBtn){ const id=rnBtn.closest('.folder').dataset.id; openFolderModal(id); }
-      const delBtn=e.target.closest('.btnFolderDelete'); if(delBtn){ const id=delBtn.closest('.folder').dataset.id; if(confirmBox('¿Eliminar carpeta?')) deleteFolder(id); }
+    document.body.addEventListener('click',e=>{
+      const idCopy=e.target.getAttribute('data-copy'); if(idCopy) copyMed(idCopy);
+      const idDup=e.target.getAttribute('data-dup'); if(idDup) duplicateMed(idDup);
+      const idDel=e.target.getAttribute('data-del'); if(idDel && confirmBox('¿Eliminar este medicamento?')) removeMed(idDel);
+      const rn=e.target.closest('.btnFolderRename'); if(rn){const id=rn.closest('.folder').dataset.id; openFolderModal(id);}
+      const dl=e.target.closest('.btnFolderDelete'); if(dl){const id=dl.closest('.folder').dataset.id; if(confirmBox('¿Eliminar carpeta?')) deleteFolder(id);}
     });
 
-    // soltar meds en el lienzo para moverlos a la carpeta activa
-    $('#cardsView').addEventListener('dragover', e=> e.preventDefault());
-    $('#cardsView').addEventListener('drop', (e)=>{ const ids=(e.dataTransfer?.getData('text/med-ids')||'').split(',').filter(Boolean); if(!ids.length) return; history.push(); ids.forEach(id=>{ const m=state.meds.find(x=>x.id===id); if(m) m.folderId=state.activeFolder; }); save(); renderAll(); });
+    // mover tarjetas a carpeta activa soltando en el panel
+    $('#cardsView').addEventListener('dragover',e=>e.preventDefault());
+    $('#cardsView').addEventListener('drop',e=>{const ids=(e.dataTransfer?.getData('text/med-ids')||'').split(',').filter(Boolean); if(!ids.length) return; history.push(); ids.forEach(id=>{const m=state.meds.find(x=>x.id===id); if(m) m.folderId=state.activeFolder;}); save(); renderAll();});
 
     // drag & drop de fotos en el modal
     const modal=$('#medModal');
-    modal.addEventListener('dragover', (e)=>{ if(e.target.closest('#medPhotosPreview')) e.preventDefault(); });
-    modal.addEventListener('drop', async (e)=>{ if(!e.target.closest('#medPhotosPreview')) return; e.preventDefault(); const files=[...e.dataTransfer.files].filter(f=>f.type.startsWith('image/') ); await previewPhotos(files); });
-    $('#medPhotos').addEventListener('change', async (e)=>{ const files=[...e.target.files]; await previewPhotos(files); });
-  }
+    modal.addEventListener('dragover',e=>{if(e.target.closest('#medPhotosPreview')) e.preventDefault();});
+    modal.addEventListener('drop',async e=>{if(!e.target.closest('#medPhotosPreview')) return; e.preventDefault(); const files=[...e.dataTransfer.files].filter(f=>f.type.startsWith('image/')); await previewPhotos(files);});
+    $('#medPhotos').addEventListener('change',async e=>{const files=[...e.target.files]; await previewPhotos(files);});
 
-  // ===== Portapapeles =====
-  async function copyMed(id){
-    const m=state.meds.find(x=>x.id===id); if(!m) return;
-    const txt=`${m.name}\n${m.dose||''}\n${m.person||''}\n${m.desc||''}`.trim();
-    try{ await navigator.clipboard.writeText(txt); toast('Copiado en el portapapeles'); }catch{ alert('No se pudo copiar'); }
+    // ===== Drawer móvil =====
+    $('#btnMenu')?.addEventListener('click',()=>{ $('#sidebar').classList.add('open'); $('#backdrop').classList.add('show'); });
+    $('#backdrop')?.addEventListener('click',closeSidebar);
   }
-  function toast(msg){
-    const t=document.createElement('div'); t.textContent=msg;
-    Object.assign(t.style,{position:'fixed',bottom:'16px',right:'16px',background:'var(--card)',border:'1px solid var(--border)',padding:'10px 12px',borderRadius:'10px',boxShadow:'var(--shadow)',zIndex:9999});
-    document.body.appendChild(t); setTimeout(()=>t.remove(),1800);
-  }
+  function closeSidebar(){ $('#sidebar').classList.remove('open'); $('#backdrop').classList.remove('show'); }
 
-  // ===== Fotos =====
-  let tempPhotos = [];
-  async function previewPhotos(files){ for(const f of files){ if(!f.type.startsWith('image/')) continue; const data = await fileToResizedDataURL(f, 1200); tempPhotos.push(data); } paintPhotosPreview(); }
-  function paintPhotosPreview(existing=[]){
-    const box=$('#medPhotosPreview'); box.innerHTML='';
-    [...existing, ...tempPhotos].forEach((src, idx)=>{
-      const d=document.createElement('div'); d.className='thumb';
-      d.innerHTML=`<img src="${src}" alt="foto"/><button class="btn danger" data-delphoto="${idx}" style="position:absolute; transform:translate(38px,-30px)">✕</button>`;
-      d.style.position='relative'; box.appendChild(d);
-    });
-    box.querySelectorAll('[data-delphoto]').forEach(btn=> btn.addEventListener('click', ()=>{
-      const i=+btn.getAttribute('data-delphoto'); tempPhotos.splice(i,1); paintPhotosPreview(existing);
-    }));
-  }
-  async function fileToResizedDataURL(file, maxSide=1200){
-    const img=await new Promise(res=>{ const r=new FileReader(); r.onload=()=>{ const i=new Image(); i.onload=()=>res(i); i.src=r.result; }; r.readAsDataURL(file); });
-    const {width,height}=img; const scale=Math.min(1, maxSide/Math.max(width,height));
-    const w=Math.round(width*scale), h=Math.round(height*scale);
-    const c=document.createElement('canvas'); c.width=w; c.height=h; const ctx=c.getContext('2d');
-    ctx.fillStyle='#fff'; ctx.fillRect(0,0,w,h); ctx.drawImage(img,0,0,w,h);
-    return c.toDataURL('image/jpeg', 0.85);
-  }
+  // Portapapeles
+  async function copyMed(id){const m=state.meds.find(x=>x.id===id); if(!m) return; const txt=`${m.name}\n${m.dose||''}\n${m.person||''}\n${m.desc||''}`.trim(); try{await navigator.clipboard.writeText(txt); toast('Copiado en el portapapeles');}catch{alert('No se pudo copiar');}}
+  function toast(msg){const t=document.createElement('div'); t.textContent=msg; Object.assign(t.style,{position:'fixed',bottom:'16px',right:'16px',background:'var(--card)',border:'1px solid var(--border)',padding:'10px 12px',borderRadius:'10px',boxShadow:'var(--shadow)',zIndex:9999}); document.body.appendChild(t); setTimeout(()=>t.remove(),1800);}
 
-  // ===== Modales =====
-  function openMedModal(id){
-    tempPhotos=[]; const m=id? state.meds.find(x=>x.id===id) : {name:'',desc:'',dose:'',person:'',folderId:state.activeFolder,tags:[],nextDose:null,photos:[]};
-    $('#medName').value=m.name||''; $('#medDesc').value=m.desc||''; $('#medDose').value=m.dose||''; $('#medPerson').value=m.person||'';
-    $('#medNext').value = m.nextDose? new Date(m.nextDose).toISOString().slice(0,16):'';
-    populateFolderSelect(); $('#medFolder').value= m.folderId||state.activeFolder;
-    $('#tagUrgente').checked= m.tags?.includes('urgente'); $('#tagCronico').checked= m.tags?.includes('cronico'); $('#tagPrueba').checked= m.tags?.includes('prueba');
-    paintPhotosPreview(m.photos||[]);
-    $('#medModal').classList.add('open');
-  }
-  function closeMedModal(){ $('#medModal').classList.remove('open'); tempPhotos=[]; }
-  function populateFolderSelect(){ const sel=$('#medFolder'); if(!sel) return; sel.innerHTML = state.folders.map(f=>`<option value="${f.id}">${f.name}</option>`).join(''); }
-  document.addEventListener('click',(e)=>{ if(e.target.id==='closeMedModal'||e.target.id==='btnCancelEdit') closeMedModal(); });
-  document.addEventListener('click',()=>{}); // placeholder
-  document.addEventListener('click',(e)=>{
-    if(e.target.id==='btnSaveMed'){
-      const data={
-        name:$('#medName').value.trim(),
-        desc:$('#medDesc').value.trim(),
-        dose:$('#medDose').value.trim(),
-        person:$('#medPerson').value.trim(),
-        folderId:$('#medFolder').value,
-        tags:[ $('#tagUrgente').checked && 'urgente', $('#tagCronico').checked && 'cronico', $('#tagPrueba').checked && 'prueba' ].filter(Boolean),
-        nextDose: $('#medNext').value ? new Date($('#medNext').value).getTime() : null
-      };
-      if(!data.name) return alert('Pon un nombre de medicamento');
-      history.push();
-      if(editingMedId){
-        const m=state.meds.find(x=>x.id===editingMedId);
-        m.photos=(m.photos||[]).concat(tempPhotos);
-        Object.assign(m, data, {updated:Date.now()});
-      } else {
-        state.meds.push({ id:uid('med'), created:Date.now(), updated:Date.now(), archived:false, photos:[...tempPhotos], ...data });
-      }
-      save(); closeMedModal(); renderAll(); scheduleCheck();
-    }
-    if(e.target.id==='btnArchive'){ if(!editingMedId) return; setArchived(editingMedId,true); closeMedModal(); }
-  });
+  // Fotos
+  let tempPhotos=[];
+  async function previewPhotos(files){for(const f of files){if(!f.type.startsWith('image/')) continue; const data=await fileToResizedDataURL(f,1200); tempPhotos.push(data);} paintPhotosPreview();}
+  function paintPhotosPreview(existing=[]){const box=$('#medPhotosPreview'); box.innerHTML=''; [...existing,...tempPhotos].forEach((src,i)=>{const d=document.createElement('div'); d.className='thumb'; d.innerHTML=`<img src="${src}" alt="foto"/><button class="btn danger" data-delphoto="${i}" style="position:absolute; transform:translate(38px,-30px)">✕</button>`; d.style.position='relative'; box.appendChild(d);}); box.querySelectorAll('[data-delphoto]').forEach(b=>b.addEventListener('click',()=>{const i=+b.getAttribute('data-delphoto'); tempPhotos.splice(i,1); paintPhotosPreview(existing);}));}
+  async function fileToResizedDataURL(file,maxSide=1200){const img=await new Promise(res=>{const r=new FileReader(); r.onload=()=>{const i=new Image(); i.onload=()=>res(i); i.src=r.result;}; r.readAsDataURL(file);}); const scale=Math.min(1,maxSide/Math.max(img.width,img.height)); const w=Math.round(img.width*scale), h=Math.round(img.height*scale); const c=document.createElement('canvas'); c.width=w; c.height=h; const ctx=c.getContext('2d'); ctx.fillStyle='#fff'; ctx.fillRect(0,0,w,h); ctx.drawImage(img,0,0,w,h); return c.toDataURL('image/jpeg',0.85);}
 
-  // ===== Papelera =====
-  function openTrashModal(){
-    const body=$('#trashBody'); body.innerHTML=''; const meds=state.trash.meds;
-    if(!meds.length){ body.innerHTML='<div class="hint">La papelera está vacía</div>'; }
-    else {
-      meds.forEach(m=>{
-        const row=document.createElement('div'); row.className='row';
-        row.style.alignItems='center'; row.style.justifyContent='space-between'; row.style.padding='6px 0'; row.style.borderBottom='1px solid var(--border)';
-        row.innerHTML = `<div><strong>${m.name}</strong><div class="hint">${m.dose||''} · ${m.person||''}</div></div><div class="row"><button class="btn" data-restore="${m.id}">Restaurar</button><button class="btn danger" data-purge="${m.id}">Eliminar</button></div>`;
-        body.appendChild(row);
-      });
-    }
-    $('#trashModal').classList.add('open');
-  }
-  function closeTrashModal(){ $('#trashModal').classList.remove('open'); }
-  document.addEventListener('click',(e)=>{ if(e.target.id==='closeTrashModal'||e.target.id==='btnCloseTrash') closeTrashModal(); });
-  document.addEventListener('click',(e)=>{ if(e.target.id==='btnPurgeAll'){ if(confirmBox('¿Eliminar definitivamente todo?')){ history.push(); state.trash.meds=[]; save(); openTrashModal(); }}});
+  // Modales
+  function openMedModal(id){tempPhotos=[]; const m=id?state.meds.find(x=>x.id===id):{name:'',desc:'',dose:'',person:'',folderId:state.activeFolder,tags:[],nextDose:null,photos:[]}; $('#medName').value=m.name||''; $('#medDesc').value=m.desc||''; $('#medDose').value=m.dose||''; $('#medPerson').value=m.person||''; $('#medNext').value=m.nextDose?new Date(m.nextDose).toISOString().slice(0,16):''; populateFolderSelect(); $('#medFolder').value=m.folderId||state.activeFolder; $('#tagUrgente').checked=m.tags?.includes('urgente'); $('#tagCronico').checked=m.tags?.includes('cronico'); $('#tagPrueba').checked=m.tags?.includes('prueba'); paintPhotosPreview(m.photos||[]); $('#medModal').classList.add('open');}
+  function closeMedModal(){$('#medModal').classList.remove('open'); tempPhotos=[];}
+  function populateFolderSelect(){const sel=$('#medFolder'); if(!sel) return; sel.innerHTML=state.folders.map(f=>`<option value="${f.id}">${f.name}</option>`).join('');}
+  document.addEventListener('click',e=>{if(e.target.id==='closeMedModal'||e.target.id==='btnCancelEdit') closeMedModal();});
+  document.addEventListener('click',e=>{if(e.target.id==='btnSaveMed'){const data={name:$('#medName').value.trim(),desc:$('#medDesc').value.trim(),dose:$('#medDose').value.trim(),person:$('#medPerson').value.trim(),folderId:$('#medFolder').value,tags:[$('#tagUrgente').checked&&'urgente',$('#tagCronico').checked&&'cronico',$('#tagPrueba').checked&&'prueba'].filter(Boolean),nextDose:$('#medNext').value?new Date($('#medNext').value).getTime():null}; if(!data.name) return alert('Pon un nombre de medicamento'); history.push(); if(editingMedId){const m=state.meds.find(x=>x.id===editingMedId); m.photos=(m.photos||[]).concat(tempPhotos); Object.assign(m,data,{updated:Date.now()});} else {state.meds.push({id:uid('med'),created:Date.now(),updated:Date.now(),archived:false,photos:[...tempPhotos],...data});} save(); closeMedModal(); renderAll(); scheduleCheck();} if(e.target.id==='btnArchive'){if(!editingMedId) return; setArchived(editingMedId,true); closeMedModal();}});
 
-  document.body.addEventListener('click', (e)=>{
-    const rid=e.target.getAttribute('data-restore'); if(rid){
-      history.push(); const m=state.trash.meds.find(x=>x.id===rid);
-      if(m){ state.meds.push(m); state.trash.meds = state.trash.meds.filter(x=>x.id!==rid); save(); openTrashModal(); renderAll(); }
-    }
-    const pid=e.target.getAttribute('data-purge'); if(pid){
-      if(confirmBox('¿Eliminar definitivamente?')){ history.push(); state.trash.meds = state.trash.meds.filter(x=>x.id!==pid); save(); openTrashModal(); }
-    }
-  });
+  // Papelera
+  function openTrashModal(){const body=$('#trashBody'); body.innerHTML=''; const meds=state.trash.meds; if(!meds.length){body.innerHTML='<div class="hint">La papelera está vacía</div>';} else {meds.forEach(m=>{const row=document.createElement('div'); row.className='row'; Object.assign(row.style,{alignItems:'center',justifyContent:'space-between',padding:'6px 0',borderBottom:'1px solid var(--border)'}); row.innerHTML=`<div><strong>${m.name}</strong><div class="hint">${m.dose||''} · ${m.person||''}</div></div><div class="row"><button class="btn" data-restore="${m.id}">Restaurar</button><button class="btn danger" data-purge="${m.id}">Eliminar</button></div>`; body.appendChild(row);});} $('#trashModal').classList.add('open');}
+  function closeTrashModal(){$('#trashModal').classList.remove('open');}
+  document.addEventListener('click',e=>{if(e.target.id==='closeTrashModal'||e.target.id==='btnCloseTrash') closeTrashModal();});
+  document.addEventListener('click',e=>{if(e.target.id==='btnPurgeAll'){if(confirmBox('¿Eliminar definitivamente todo?')){history.push(); state.trash.meds=[]; save(); openTrashModal(); }}});
 
-  // ===== Importar / Exportar =====
-  function doExport(){ const data=JSON.stringify({...state, selected:[]}, null, 2); const blob=new Blob([data], {type:'application/json'}); const url=URL.createObjectURL(blob); const a=document.createElement('a'); a.href=url; a.download='botiquin.json'; a.click(); URL.revokeObjectURL(url); }
-  function handleImport(e){
-    const file=e.target.files[0]; if(!file) return;
-    const reader=new FileReader();
-    reader.onload=()=>{ try{ const data=JSON.parse(reader.result); history.push(); state={...data, selected:new Set()}; applyTheme(state.theme||'dark'); save(); renderAll(); }catch{ alert('JSON no válido'); } };
-    reader.readAsText(file); e.target.value='';
-  }
+  document.body.addEventListener('click',e=>{const rid=e.target.getAttribute('data-restore'); if(rid){history.push(); const m=state.trash.meds.find(x=>x.id===rid); if(m){state.meds.push(m); state.trash.meds=state.trash.meds.filter(x=>x.id!==rid); save(); openTrashModal(); renderAll();}} const pid=e.target.getAttribute('data-purge'); if(pid){if(confirmBox('¿Eliminar definitivamente?')){history.push(); state.trash.meds=state.trash.meds.filter(x=>x.id!==pid); save(); openTrashModal();}}});
 
-  // ===== Recordatorios =====
-  async function enableNotifications(){ try{ const res=await Notification.requestPermission(); if(res==='granted'){ toast('Notificaciones activadas'); scheduleCheck(); } else { alert('Permiso de notificaciones denegado'); } }catch{ alert('Este navegador no soporta notificaciones'); } }
-  let reminderTimer = null;
-  function scheduleCheck(){ if(reminderTimer) clearInterval(reminderTimer); reminderTimer=setInterval(checkReminders, 30*1000); }
-  function checkReminders(){ const now=Date.now(); state.meds.forEach(m=>{ if(m.nextDose && m.nextDose<=now && !m._fired){ m._fired=true; notify(`Toca tomar: ${m.name}`, m.dose||''); } }); }
-  function notify(title, body){ if('Notification' in window && Notification.permission==='granted'){ new Notification(title, {body}); } alert(`${title}\n${body}`); }
+  // Importar/Exportar
+  function doExport(){const data=JSON.stringify({...state,selected:[]},null,2); const url=URL.createObjectURL(new Blob([data],{type:'application/json'})); const a=document.createElement('a'); a.href=url; a.download='botiquin.json'; a.click(); URL.revokeObjectURL(url);}
+  function handleImport(e){const file=e.target.files[0]; if(!file) return; const r=new FileReader(); r.onload=()=>{try{const data=JSON.parse(r.result); history.push(); state={...data,selected:new Set()}; applyTheme(state.theme||'dark'); save(); renderAll();}catch{alert('JSON no válido');}}; r.readAsText(file); e.target.value='';}
 
-  // ===== Inicialización, demo y binds globales =====
-  function ensureDemo(){
-    if(state.meds.length===0){
-      const ab=addFolder('Antibióticos'); const an=addFolder('Analgésicos'); const vt=addFolder('Vitaminas');
-      history.push();
-      state.meds.push(
-        {id:uid('med'), name:'Amoxicilina 500 mg', desc:'Infección respiratoria. Tomar con comida. Vigilar diarrea.', dose:'Cada 8h durante 5 días', person:'Laura', folderId:ab, tags:['urgente'], photos:[], created:Date.now(), updated:Date.now()},
-        {id:uid('med'), name:'Ibuprofeno 400 mg', desc:'Dolor moderado. Evitar si hay gastritis.', dose:'Cada 8h si dolor', person:'Padre', folderId:an, photos:[], created:Date.now(), updated:Date.now()},
-        {id:uid('med'), name:'Vitamina D3 2000 UI', desc:'Suplemento diario.', dose:'1 al día', person:'Bebé', folderId:vt, tags:['cronico'], photos:[], created:Date.now(), updated:Date.now()}
-      );
-      save();
-    }
-  }
+  // Recordatorios
+  async function enableNotifications(){try{const res=await Notification.requestPermission(); if(res==='granted'){toast('Notificaciones activadas'); scheduleCheck();} else {alert('Permiso de notificaciones denegado');}}catch{alert('Este navegador no soporta notificaciones');}}
+  let reminderTimer=null; function scheduleCheck(){if(reminderTimer) clearInterval(reminderTimer); reminderTimer=setInterval(checkReminders,30*1000);}
+  function checkReminders(){const now=Date.now(); state.meds.forEach(m=>{if(m.nextDose && m.nextDose<=now && !m._fired){m._fired=true; notify(`Toca tomar: ${m.name}`, m.dose||'');}});}
+  function notify(title,body){if('Notification' in window && Notification.permission==='granted'){new Notification(title,{body});} alert(`${title}\n${body}`);}
 
-  function bindGlobalClicks(){
-    document.addEventListener('click', (e)=>{
-      if(!state.selectMode) return;
-      const card=e.target.closest('.card');
-      if(card && !e.target.closest('button,select,.checkbox,input')){
-        const id=card.dataset.id; if(state.selected.has(id)) state.selected.delete(id); else state.selected.add(id);
-        updateSelectionUI(); save();
-      }
-    });
-  }
-
-  function init(){
-    load(); bindEvents(); ensureDemo(); renderAll(); scheduleCheck(); bindGlobalClicks();
-    const observer=new MutationObserver(()=>{ $$('#cardsView .card').forEach(c=> attachCardDrag(c, c.dataset.id)); });
-    observer.observe($('#cardsView'), {childList:true});
-  }
+  // Inicialización
+  function ensureDemo(){ if(state.meds.length===0){const ab=addFolder('Antibióticos'), an=addFolder('Analgésicos'), vt=addFolder('Vitaminas'); history.push(); state.meds.push(
+      {id:uid('med'),name:'Amoxicilina 500 mg',desc:'Infección respiratoria. Tomar con comida. Vigilar diarrea.',dose:'Cada 8h durante 5 días',person:'Laura',folderId:ab,tags:['urgente'],photos:[],created:Date.now(),updated:Date.now()},
+      {id:uid('med'),name:'Ibuprofeno 400 mg',desc:'Dolor moderado. Evitar si hay gastritis.',dose:'Cada 8h si dolor',person:'Padre',folderId:an,photos:[],created:Date.now(),updated:Date.now()},
+      {id:uid('med'),name:'Vitamina D3 2000 UI',desc:'Suplemento diario.',dose:'1 al día',person:'Bebé',folderId:vt,tags:['cronico'],photos:[],created:Date.now(),updated:Date.now()}
+    ); save();}}
+  function bindGlobalClicks(){document.addEventListener('click',e=>{if(!state.selectMode) return; const card=e.target.closest('.card'); if(card && !e.target.closest('button,select,.checkbox,input')){const id=card.dataset.id; if(state.selected.has(id)) state.selected.delete(id); else state.selected.add(id); updateSelectionUI(); save();}});}
+  function init(){load(); bindEvents(); ensureDemo(); renderAll(); scheduleCheck(); bindGlobalClicks(); const obs=new MutationObserver(()=>{$$('#cardsView .card').forEach(c=>attachCardDrag(c,c.dataset.id));}); obs.observe($('#cardsView'),{childList:true});}
   init();
   </script>
 </body>
