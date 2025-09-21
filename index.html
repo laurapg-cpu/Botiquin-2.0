@@ -558,7 +558,7 @@ const tags = [
     m.tags?.prueba?'<span class="tag prueba">En prueba</span>':'',
     m.tags?.prn?'<span class="tag prn">Cuando sea necesario</span>':''
   ].filter(Boolean).join(' ');
-  const photos = (m.photos||[]).map((src,i)=>`<div class="thumb" data-i="${i}"><img src="${src}" alt="Foto"/><button class="btn x" title="Quitar foto">×</button></div>`).join('');
+  const photos = (m.photos||[]).map((src,i)=>`<div class="thumb" data-i="${i}"><img src="${src}" alt="Foto"/></div>`).join('');
   const collapsed = state.collapsed[m.id];
 return `<div class="card ${collapsed?'collapsed':''}" data-id="${m.id}" draggable="true">
   <div class="left">
