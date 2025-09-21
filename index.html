@@ -728,7 +728,7 @@ function openMedModal(id){
     med.dose=fields.dose.value.trim();
     med.person=fields.person.value.trim();
     med.folderId=fields.folder.value;
-    med.next=fields.next.value? new Date(fields.next.value).toISOString() : '';
+    med.next = toISOFromLocal(fields.next.value);
     med.tags={urgente:fields.tUrg.checked, cronico:fields.tCro.checked, prueba:fields.tPrb.checked, prn:fields.tPrn.checked};
     med.updated=Date.now();
     if(isNew) state.meds.push(med);
