@@ -764,13 +764,27 @@ function renderPhotosPreview(container, photos){
   }));
 }
 async function resizeImageToDataURL(file, maxDim=1200){
-  const img = await new Promise(res=>{ const i=new Image(); i.onload=()=>res(i); i.src=URL.createObjectURL(file); });
-  const canvas=document.createElement('canvas'); const ctx=canvas.getContext('2d');
-  let {width:w,height:h}=img;
-  if(w>h){ if(w>maxDim){ h = Math.round(h*maxDim/w); w=maxDim; } }
-  else { if(h>maxDim){ w = Math.round(w*maxDim/h); h=maxDim; } }
-  canvas.width=w; canvas.height=h; ctx.drawImage(img,0,0,w,h);
-  return canvas.toDataURL('image/jpeg',0.85);
+  // Leer como blob URL para máxima compatibilidad
+  const blobUrl = URL.createObjectURL(file);
+  try{
+    const img = await new Promise((resolve, reject)=>{
+      const i = new Image();
+      i.onload = ()=> resolve(i);
+      i.onerror = ()=> reject(new Error('No se pudo cargar la imagen'));
+      i.src = blobUrl;
+    });
+    const canvas = document.createElement('canvas');
+    const ctx = canvas.getContext('2d',{ willReadFrequently:true });
+    let w = img.naturalWidth || img.width;
+    let h = img.naturalHeight || img.height;
+    if(w>h){ if(w>maxDim){ h = Math.round(h*maxDim/w); w=maxDim; } }
+    else   { if(h>maxDim){ w = Math.round(w*maxDim/h); h=maxDim; } }
+    canvas.width = w; canvas.height = h;
+    ctx.drawImage(img, 0, 0, w, h);
+    return canvas.toDataURL('image/jpeg', 0.85);
+  } finally {
+    URL.revokeObjectURL(blobUrl);
+  }
 }
 
 function deleteMeds(ids){
