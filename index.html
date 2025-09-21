@@ -1,0 +1,99 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+  <meta id="theme-color" name="theme-color" content="#0f1115">
+  <title>Botiquín · Gestor de Medicamentos (PWA)</title>
+  <style>
+    :root {
+      --bg:#0f1115;--panel:#151925;--sidebar:#1b2030;--text:#e6e8ee;
+      --muted:#a8afc1;--primary:#5dd5c4;--accent:#a78bfa;
+      --danger:#ef4444;--warning:#f59e0b;--success:#22c55e;
+      --border:#2a3042;--card:#171c2a;--shadow:0 4px 20px rgba(0,0,0,0.3);
+    }
+    body {margin:0;font-family:sans-serif;background:var(--bg);color:var(--text);display:flex;height:100vh;overflow:hidden;}
+    header{position:sticky;top:0;background:var(--panel);z-index:10;display:flex;align-items:center;padding:0.5rem;box-shadow:var(--shadow);}
+    header svg{width:32px;height:32px;margin-right:0.5rem;}
+    header h1{font-size:1.1rem;flex:1;}
+    header input[type=search]{padding:0.3rem;border-radius:5px;border:1px solid var(--border);background:var(--card);color:var(--text);}
+    #sidebar{background:var(--sidebar);width:220px;flex-shrink:0;overflow-y:auto;}
+    #sidebar ul{list-style:none;padding:0;margin:0;}
+    #sidebar li{padding:0.5rem;cursor:pointer;}
+    #sidebar li.active{background:var(--card);}
+    #main{flex:1;overflow-y:auto;padding:1rem;display:grid;grid-template-columns:repeat(auto-fill,minmax(320px,1fr));gap:1rem;}
+    .card{background:var(--card);padding:1rem;border-radius:10px;box-shadow:var(--shadow);position:relative;}
+    .card h2{margin:0 0 0.5rem 0;font-size:1.1rem;cursor:pointer;}
+    .card p{margin:0.2rem 0;color:var(--muted);overflow:hidden;display:-webkit-box;-webkit-line-clamp:5;-webkit-box-orient:vertical;}
+    .card footer{margin-top:0.5rem;display:flex;justify-content:space-between;}
+    .btn{background:var(--primary);border:none;padding:0.4rem 0.8rem;border-radius:5px;color:#000;cursor:pointer;}
+    .fab{position:fixed;right:1rem;bottom:1rem;background:var(--accent);color:#fff;width:56px;height:56px;border-radius:50%;display:flex;align-items:center;justify-content:center;font-size:2rem;cursor:pointer;box-shadow:var(--shadow);}
+    dialog{border:none;border-radius:10px;padding:1rem;max-width:400px;}
+    dialog form{display:flex;flex-direction:column;gap:0.5rem;}
+    dialog input, dialog textarea, dialog select{padding:0.5rem;border:1px solid var(--border);border-radius:5px;background:var(--card);color:var(--text);}
+    .hidden{display:none;}
+  </style>
+</head>
+<body>
+  <div id="sidebar">
+    <ul id="folders"></ul>
+  </div>
+  <div style="flex:1;display:flex;flex-direction:column;">
+    <header>
+      <svg viewBox="0 0 24 24" fill="currentColor"><path d="M12 2C6.48 2 2 6.48 2 12s4.48 
+      10 10 10 10-4.48 10-10S17.52 2 12 
+      2zm1 17.93c-2.83.48-5.62-.3-7.66-2.34C3.3 
+      15.55 2.52 12.76 3 9.93 3.47 7.1 5.33 4.9 
+      8 4.07V11h7v8.93z"/></svg>
+      <h1>Botiquín</h1>
+      <input id="search" type="search" placeholder="Buscar…">
+    </header>
+    <main id="main"></main>
+  </div>
+  <div class="fab" id="addBtn">＋</div>
+
+  <dialog id="medDialog">
+    <form id="medForm" method="dialog">
+      <input type="hidden" id="medId">
+      <input id="medName" placeholder="Nombre" required>
+      <textarea id="medDesc" placeholder="Descripción"></textarea>
+      <input id="medFreq" placeholder="Frecuencia/Posología">
+      <input id="medPerson" placeholder="Persona asignada">
+      <input type="datetime-local" id="medNext">
+      <select id="medFolder"></select>
+      <menu>
+        <button class="btn" value="cancel">Cancelar</button>
+        <button class="btn" value="ok">Guardar</button>
+      </menu>
+    </form>
+  </dialog>
+
+<script>
+const state={folders:[],meds:[],theme:"dark"};
+const foldersEl=document.getElementById("folders");
+const mainEl=document.getElementById("main");
+const medDialog=document.getElementById("medDialog");
+const medForm=document.getElementById("medForm");
+const searchEl=document.getElementById("search");
+
+function uid(){return Date.now().toString(36)+Math.random().toString(36).substr(2);}
+function save(){localStorage.setItem("botiquin",JSON.stringify(state));}
+function load(){const d=localStorage.getItem("botiquin");if(d)Object.assign(state,JSON.parse(d));if(!state.folders.length)state.folders=[{id:"all",name:"Todos"}];}
+function renderFolders(){foldersEl.innerHTML="";state.folders.forEach(f=>{const li=document.createElement("li");li.textContent=f.name;li.dataset.id=f.id;if(f.id===currentFolder)li.classList.add("active");li.onclick=()=>{currentFolder=f.id;render();};foldersEl.appendChild(li);});}
+function render(){renderFolders();mainEl.innerHTML="";const q=searchEl.value.toLowerCase();state.meds.filter(m=>currentFolder==="all"||m.folder===currentFolder).filter(m=>m.name.toLowerCase().includes(q)||m.person?.toLowerCase().includes(q)||m.freq?.toLowerCase().includes(q)).forEach(m=>{const card=document.createElement("div");card.className="card";const h2=document.createElement("h2");h2.textContent=m.name;h2.ondblclick=()=>editMed(m.id);card.appendChild(h2);if(m.desc){const p=document.createElement("p");p.textContent=m.desc;card.appendChild(p);}if(m.freq){const p=document.createElement("p");p.textContent=m.freq;card.appendChild(p);}if(m.person){const p=document.createElement("p");p.textContent="👤 "+m.person;card.appendChild(p);}if(m.next){const p=document.createElement("p");p.textContent="⏰ "+new Date(m.next).toLocaleString();card.appendChild(p);}const footer=document.createElement("footer");const editBtn=document.createElement("button");editBtn.textContent="✏️";editBtn.onclick=()=>editMed(m.id);const delBtn=document.createElement("button");delBtn.textContent="🗑️";delBtn.onclick=()=>{if(confirm("Eliminar?")){state.meds=state.meds.filter(x=>x.id!==m.id);save();render();}};footer.append(editBtn,delBtn);card.appendChild(footer);mainEl.appendChild(card);});}
+function editMed(id){const m=state.meds.find(x=>x.id===id)||{id:uid(),name:"",desc:"",freq:"",person:"",next:"",folder:currentFolder};document.getElementById("medId").value=m.id;document.getElementById("medName").value=m.name;document.getElementById("medDesc").value=m.desc;document.getElementById("medFreq").value=m.freq;document.getElementById("medPerson").value=m.person;document.getElementById("medNext").value=m.next;const sel=document.getElementById("medFolder");sel.innerHTML="";state.folders.forEach(f=>{const opt=document.createElement("option");opt.value=f.id;opt.textContent=f.name;if(f.id===m.folder)opt.selected=true;sel.appendChild(opt);});medDialog.showModal();}
+medForm.onsubmit=e=>{e.preventDefault();const id=document.getElementById("medId").value||uid();const idx=state.meds.findIndex(x=>x.id===id);const obj={id,name:document.getElementById("medName").value,desc:document.getElementById("medDesc").value,freq:document.getElementById("medFreq").value,person:document.getElementById("medPerson").value,next:document.getElementById("medNext").value,folder:document.getElementById("medFolder").value};if(idx>=0)state.meds[idx]=obj;else state.meds.push(obj);save();render();medDialog.close();};
+document.getElementById("addBtn").onclick=()=>editMed();
+searchEl.oninput=()=>render();
+let currentFolder="all";load();render();
+
+// Manifest
+const manifest={name:"Botiquín · Gestor de Medicamentos",short_name:"Botiquín",start_url:".",display:"standalone",background_color:"#0f1115",theme_color:"#0f1115",icons:[{src:"data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><rect width='100' height='100' rx='20' ry='20' fill='%23a78bfa'/><path d='M45 20h10v60H45zM20 45h60v10H20z' fill='white'/></svg>",sizes:"100x100",type:"image/svg+xml"}]};
+const manifestEl=document.createElement("script");manifestEl.type="application/manifest+json";manifestEl.textContent=JSON.stringify(manifest);document.head.appendChild(manifestEl);
+
+// Service Worker
+const swCode=`const CACHE_VERSION='v1';const CACHE_NAME='botiquin-'+CACHE_VERSION;self.addEventListener('install',e=>{e.waitUntil(caches.open(CACHE_NAME).then(c=>c.addAll(['./'])));self.skipWaiting();});self.addEventListener('activate',e=>{e.waitUntil(caches.keys().then(keys=>Promise.all(keys.filter(k=>k!==CACHE_NAME).map(k=>caches.delete(k)))));self.clients.claim();});self.addEventListener('fetch',e=>{e.respondWith(caches.match(e.request).then(r=>r||fetch(e.request)));});`;
+if('serviceWorker'in navigator){const blob=new Blob([swCode],{type:"application/javascript"});const swUrl=URL.createObjectURL(blob);navigator.serviceWorker.register(swUrl);}
+</script>
+</body>
+</html>
