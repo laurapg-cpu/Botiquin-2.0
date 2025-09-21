@@ -720,11 +720,11 @@ function openMedModal(id){
     med.photos = [...(med.photos||[]), ...reduced];
     med.updated = Date.now();
     renderPhotosPreview(fields.photosPreview, med.photos);
+    save(); // <<--- fuerza persistencia inmediata
   }catch(err){
     console.error(err);
     alert('No se pudieron procesar algunas imágenes.');
   }finally{
-    // Limpia el input por si quieres volver a adjuntar las mismas
     e.target.value = '';
   }
 };
