@@ -14,33 +14,55 @@
     .theme-solar{--bg:#002b36;--panel:#073642;--sidebar:#05303a;--text:#eee8d5;--muted:#93a1a1;--primary:#b58900;--accent:#2aa198;--danger:#dc322f;--warning:#cb4b16;--success:#859900;--border:#0b3942;--card:#083440}
 
     *{box-sizing:border-box} html,body{height:100%} body{margin:0;background:var(--bg);color:var(--text);font:14px/1.5 system-ui,-apple-system,Segoe UI,Roboto,Ubuntu,Cantarell,Noto Sans,Arial}
-    .app{display:grid;grid-template-columns:260px 1fr;height:100vh}
+    [data-ink]{ color: var(--text) !important; }
+    .btn, .pill, .hint, .counter { color: var(--text); }
+    .field input,.field textarea,.field select { color: var(--text); }
+    .table td, .table th { color: var(--text); }
+
+    .app{display:grid;grid-template-columns:260px 1fr;height:100vh;min-width:0}
     .sidebar{background:var(--sidebar);border-right:1px solid var(--border);padding:16px 12px;overflow:auto}
     .main{display:flex;flex-direction:column;background:var(--panel);min-width:0}
-    .topbar{display:flex;align-items:center;gap:8px;padding:10px 14px;border-bottom:1px solid var(--border);position:sticky;top:0;background:var(--panel);z-index:5}
+    .topbar{display:flex;align-items:center;gap:8px;padding:10px 14px;border-bottom:1px solid var(--border);position:sticky;top:0;background:var(--panel);z-index:5;flex-wrap:wrap}
+    .topbar>*{min-width:0}
     .logo{display:flex;align-items:center;gap:10px;font-weight:700}
     .logo svg{width:26px;height:26px}
-    .toolbar{display:flex;flex-wrap:wrap;gap:8px;margin-left:auto}
+    .toolbar{display:flex;flex-wrap:wrap;gap:8px;margin-left:auto;min-width:0;overflow:auto;max-width:100%}
     .toolbar .group{display:flex;gap:6px}
-    .btn{border:1px solid var(--border);background:transparent;padding:8px 10px;border-radius:10px;cursor:pointer;transition:.15s ease;display:inline-flex;align-items:center;gap:6px}
+    .btn{border:1px solid var(--border);background:transparent;padding:8px 10px;border-radius:10px;cursor:pointer;transition:.15s ease;display:inline-flex;align-items:center;gap:6px;white-space:nowrap}
     .btn:hover{background:color-mix(in srgb, var(--primary) 10%, transparent)}
     .btn.primary{border-color:color-mix(in srgb, var(--primary) 50%, var(--border));background:color-mix(in srgb, var(--primary) 15%, transparent)}
     .btn.danger{border-color:color-mix(in srgb, var(--danger) 50%, var(--border));background:color-mix(in srgb, var(--danger) 10%, transparent)}
     .btn:disabled{opacity:.5;pointer-events:none}
-    .search{flex:1;max-width:420px;display:flex;align-items:center;gap:8px;background:var(--card);border:1px solid var(--border);border-radius:12px;padding:6px 10px}
-    .search input{border:none;background:transparent;outline:none;width:100%}
+    .search{flex:1;min-width:220px;max-width:520px;display:flex;align-items:center;gap:8px;background:var(--card);border:1px solid var(--border);border-radius:12px;padding:6px 10px}
+    .search input{border:none;background:transparent;outline:none;width:100%; color: var(--text); }
     .folders-header{display:flex;align-items:center;justify-content:space-between;margin:10px 6px 6px}
     .folder-list{display:flex;flex-direction:column;gap:6px}
     .folder{display:flex;align-items:center;gap:8px;padding:8px 10px;border:1px solid var(--border);border-radius:10px;background:var(--card);cursor:pointer}
     .folder.active{outline:2px solid var(--primary)}
     .folder-name{flex:1;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
     .folder-actions{display:flex;gap:4px}
-    .content{flex:1;overflow:auto;padding:16px}
+    .content{flex:1;overflow:auto;padding:0 16px 16px}
+
+    /* HERO (ilustración) */
+    .hero{position:relative;margin:12px 0 8px;border:1px solid var(--border);border-radius:14px;padding:16px;overflow:hidden;background:
+      radial-gradient(1200px 300px at -10% -80%, color-mix(in srgb,var(--primary) 25%, transparent), transparent),
+      radial-gradient(900px 240px at 120% -60%, color-mix(in srgb,var(--accent) 28%, transparent), transparent),
+      var(--card);
+    }
+    .hero h1{margin:0;font-size:20px}
+    .hero p{margin:6px 0 0;color:var(--muted)}
+    .hero svg{position:absolute;right:10px;bottom:-6px;width:180px;opacity:.25}
+
     .grid{display:grid;grid-template-columns:repeat(auto-fill, minmax(320px, 1fr));gap:12px}
-    .card{background:var(--card);border:1px solid var(--border);border-radius:14px;padding:12px;display:flex;flex-direction:column;gap:8px;box-shadow:var(--shadow)}
+    .list{display:flex;flex-direction:column;gap:10px}
+    .list .card{display:grid;grid-template-columns:1fr auto;align-items:center}
+    .list .desc{-webkit-line-clamp:2}
+
+    .card{background:var(--card);border:1px solid var(--border);border-radius:14px;padding:12px;display:flex;flex-direction:column;gap:8px;box-shadow:var(--shadow);min-width:0;user-select:none}
     .card.dragging{opacity:.6}
-    .card-header{display:flex;align-items:center;gap:8px}
-    .title{font-weight:700;flex:1;min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+    .card.collapsed .photos,.card.collapsed .desc,.card.collapsed .meta,.card.collapsed .row{display:none}
+    .card-header{display:flex;align-items:center;gap:8px;min-width:0}
+    .title{font-weight:700;flex:1;min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap; cursor:default}
     .person{font-size:12px;color:var(--muted);border:1px solid var(--border);padding:2px 6px;border-radius:999px}
     .desc{color:var(--muted);display:-webkit-box;-webkit-line-clamp:5;-webkit-box-orient:vertical;overflow:hidden}
     .meta{display:flex;flex-wrap:wrap;gap:6px;color:var(--muted)}
@@ -53,15 +75,16 @@
     .checkbox input{appearance:none;width:14px;height:14px;border-radius:3px;border:1px solid var(--border)}
     .checkbox input:checked{background:var(--primary);border-color:var(--primary)}
     .photos{display:flex;gap:6px;flex-wrap:wrap}
-    .thumb{width:64px;height:64px;border:1px solid var(--border);border-radius:8px;overflow:hidden;background:#0002;display:inline-flex;align-items:center;justify-content:center}
+    .thumb{width:64px;height:64px;border:1px solid var(--border);border-radius:8px;overflow:hidden;background:#0002;display:inline-flex;align-items:center;justify-content:center;position:relative}
     .thumb img{width:100%;height:100%;object-fit:cover}
+    .thumb .x{position:absolute;top:2px;right:2px}
     .table{width:100%;border-collapse:collapse;background:var(--card);border:1px solid var(--border);border-radius:12px;overflow:hidden}
     .table th,.table td{padding:10px;border-bottom:1px solid var(--border)}
     .table th{text-align:left;color:var(--muted);font-weight:600;background:color-mix(in srgb, var(--card) 70%, var(--panel))}
     .table tr:hover td{background:color-mix(in srgb, var(--primary) 8%, transparent)}
     .modal{position:fixed;inset:0;background:rgba(0,0,0,.5);display:none;align-items:center;justify-content:center;padding:16px;z-index:50}
     .modal.open{display:flex}
-    .dialog{background:var(--panel);border:1px solid var(--border);border-radius:14px;min-width:320px;max-width:820px;width:100%;box-shadow:var(--shadow)}
+    .dialog{background:var(--panel);border:1px solid var(--border);border-radius:14px;min-width:320px;max-width:860px;width:100%;box-shadow:var(--shadow)}
     .dialog .hd{display:flex;align-items:center;justify-content:space-between;padding:12px 14px;border-bottom:1px solid var(--border);font-weight:700}
     .dialog .bd{padding:14px;display:grid;gap:10px}
     .dialog .ft{display:flex;justify-content:flex-end;gap:8px;padding:12px 14px;border-top:1px solid var(--border)}
@@ -73,14 +96,13 @@
     .hint{color:var(--muted);font-size:12px}
     .drop-hint{border:1px dashed var(--border);border-radius:10px;padding:8px;text-align:center;color:var(--muted)}
 
-    /* ===== RESPONSIVE MÓVIL (sin scroll lateral) ===== */
-    html, body { overflow-x: hidden; }           /* no scroll horizontal */
+    html, body { overflow-x: hidden; }
     .main { min-width: 0; }
     @media (max-width: 960px){
       .grid{ grid-template-columns: repeat(auto-fill, minmax(260px, 1fr)); }
     }
     @media (max-width: 720px){
-      .app{ grid-template-columns: 1fr; }        /* 1 sola columna */
+      .app{ grid-template-columns: 1fr; }
       .sidebar{
         position: fixed; left: 0; top: 0; bottom: 0;
         width: 88vw; max-width: 320px;
@@ -90,12 +112,9 @@
       }
       .sidebar.open{ transform: translateX(0); }
       .content{ padding: 12px; }
-      .search{ max-width: none; }
+      .search{ max-width: none; min-width:0 }
     }
-    .backdrop{
-      position: fixed; inset: 0; background: rgba(0,0,0,.45);
-      display:none; z-index:90;
-    }
+    .backdrop{ position: fixed; inset: 0; background: rgba(0,0,0,.45); display:none; z-index:90; }
     .backdrop.show{ display:block; }
   </style>
 </head>
@@ -103,7 +122,6 @@
   <div class="app" id="app">
     <aside class="sidebar" id="sidebar">
       <div class="logo" title="Botiquín · Salud digital">
-        <!-- Logo SVG (frasco de medicina) -->
         <svg viewBox="0 0 64 64" aria-hidden="true">
           <defs><linearGradient id="g1" x1="0" x2="1" y1="0" y2="1">
             <stop offset="0%" stop-color="var(--primary)"/><stop offset="100%" stop-color="var(--accent)"/>
@@ -114,32 +132,32 @@
           <rect x="20" y="32" width="24" height="16" rx="4" fill="url(#g1)" opacity=".25"/>
           <path d="M30 36h4v-4h4v4h4v4h-4v4h-4v-4h-4z" fill="url(#g1)"/>
         </svg>
-        <span class="brand">Botiquín</span>
+        <span class="brand" data-ink>Botiquín</span>
       </div>
       <div class="folders-header">
-        <strong>Carpetas</strong>
-        <div><button class="btn" id="btnNewFolder" title="Nueva carpeta">＋</button></div>
+        <strong data-ink>Carpetas</strong>
+        <div><button class="btn" id="btnNewFolder" type="button" title="Nueva carpeta">＋</button></div>
       </div>
       <div class="folder-list" id="folderList" aria-label="Lista de carpetas"></div>
-      <div class="hint" style="margin-top:10px">Arrastra medicamentos a una carpeta para moverlos.</div>
+      <div class="hint" style="margin-top:10px" data-ink>Arrastra medicamentos a una carpeta para moverlos.</div>
       <hr style="border-color:var(--border);margin:14px 0"/>
       <div class="folders-header">
-        <strong>Papelera</strong>
+        <strong data-ink>Papelera</strong>
         <div class="folder-actions">
-          <button class="btn" id="btnTrash">Ver</button>
-          <button class="btn danger" id="btnEmptyTrash">Vaciar</button>
+          <button class="btn" id="btnTrash" type="button">Ver</button>
+          <button class="btn danger" id="btnEmptyTrash" type="button">Vaciar</button>
         </div>
       </div>
     </aside>
 
     <main class="main">
       <div class="topbar">
-        <!-- Botón de menú (para abrir el sidebar en móvil) -->
-        <button class="btn" id="btnMenu" aria-label="Abrir menú">☰</button>
+        <button class="btn" id="btnMenu" type="button" aria-label="Abrir menú">☰</button>
 
         <div class="pill" title="Selector de vista">
           <select id="viewSelect">
-            <option value="cards">Vista tarjetas</option>
+            <option value="cards">Vista cuadrícula</option>
+            <option value="list">Vista tarjetas alargadas</option>
             <option value="table">Vista tabla</option>
           </select>
         </div>
@@ -157,28 +175,47 @@
         </div>
         <div class="toolbar">
           <div class="group">
-            <button class="btn" id="btnSelectMode" title="Modo selección (mueve o elimina varios)">Seleccionar</button>
-            <button class="btn danger" id="btnDeleteSelected" title="Eliminar seleccionados" disabled>Eliminar seleccionados</button>
+            <button class="btn" id="btnSelectMode" type="button" title="Modo selección (mueve o elimina varios)">Seleccionar</button>
+            <button class="btn danger" id="btnDeleteSelected" type="button" title="Eliminar seleccionados" disabled>Eliminar seleccionados</button>
             <span class="counter" id="selectedCount">0 seleccionados</span>
           </div>
           <div class="group">
-            <button class="btn" id="btnUndo" title="Deshacer (Ctrl+Z)">↶</button>
-            <button class="btn" id="btnRedo" title="Rehacer (Ctrl+Y / Ctrl+Shift+Z)">↷</button>
+            <button class="btn" id="btnUndo" type="button" title="Deshacer (Ctrl+Z)">↶</button>
+            <button class="btn" id="btnRedo" type="button" title="Rehacer (Ctrl+Y / Ctrl+Shift+Z)">↷</button>
           </div>
           <div class="group">
-            <button class="btn" id="btnNewMed" title="Nuevo medicamento">+ Medicamento</button>
-            <button class="btn" id="btnImport" title="Importar JSON">Importar</button>
-            <button class="btn" id="btnExport" title="Exportar JSON">Exportar</button>
+            <button class="btn primary" id="btnNewMed" type="button" title="Nuevo medicamento">+ Medicamento</button>
+            <button class="btn" id="btnImport" type="button" title="Importar JSON">Importar</button>
+            <button class="btn" id="btnExport" type="button" title="Exportar JSON">Exportar</button>
           </div>
           <div class="group">
-            <button class="btn" id="btnNotify" title="Activar recordatorios (notificaciones del navegador)">🔔</button>
-            <button class="btn" id="btnTheme" title="Cambiar tema">🎨</button>
+            <button class="btn" id="btnNotify" type="button" title="Activar recordatorios (notificaciones del navegador)">🔔</button>
+            <button class="btn" id="btnTheme" type="button" title="Cambiar tema">🎨</button>
           </div>
         </div>
       </div>
+
       <div class="content">
-        <div id="breadcrumb" class="hint" style="margin:0 0 10px 2px"></div>
+        <!-- HERO con ilustración -->
+        <section class="hero" aria-label="Cabecera visual">
+          <h1 data-ink>Tu botiquín, organizado</h1>
+          <p data-ink>Guarda medicamentos por carpetas, añade fotos, planifica tomas y recibe recordatorios.</p>
+          <svg viewBox="0 0 220 120" aria-hidden="true">
+            <defs><linearGradient id="p1" x1="0" x2="1"><stop offset="0" stop-color="var(--primary)"/><stop offset="1" stop-color="var(--accent)"/></linearGradient></defs>
+            <g opacity="0.9">
+              <rect x="120" y="10" width="56" height="20" rx="4" fill="url(#p1)"/>
+              <rect x="126" y="28" width="44" height="10" rx="3" fill="url(#p1)" opacity="0.8"/>
+              <rect x="110" y="40" width="76" height="60" rx="14" fill="none" stroke="url(#p1)" stroke-width="4"/>
+              <rect x="120" y="56" width="56" height="26" rx="8" fill="url(#p1)" opacity="0.16"/>
+              <g transform="translate(18,55) rotate(-18)"><rect x="0" y="0" width="70" height="24" rx="12" fill="url(#p1)"/><rect x="0" y="0" width="35" height="24" rx="12" fill="var(--card)"/></g>
+              <g transform="translate(34,78) rotate(12)"><rect x="0" y="0" width="70" height="24" rx="12" fill="url(#p1)"/><rect x="35" y="0" width="35" height="24" rx="12" fill="var(--card)"/></g>
+            </g>
+          </svg>
+        </section>
+
+        <div id="breadcrumb" class="hint" style="margin:0 0 10px 2px" data-ink></div>
         <div id="cardsView" class="grid" aria-live="polite"></div>
+        <div id="listView" class="list" style="display:none"></div>
         <div id="tableView" style="display:none"></div>
       </div>
     </main>
@@ -187,7 +224,7 @@
   <!-- Modales -->
   <div class="modal" id="medModal" role="dialog" aria-modal="true">
     <div class="dialog">
-      <div class="hd">Editar medicamento <button class="btn" id="closeMedModal">✕</button></div>
+      <div class="hd">Editar medicamento <button class="btn" id="closeMedModal" type="button">✕</button></div>
       <div class="bd">
         <div class="field"><label>Nombre</label><input id="medName" placeholder="Ej. Amoxicilina 500 mg"/></div>
         <div class="field"><label>Descripción</label><textarea id="medDesc" placeholder="Breve descripción (síntomas, notas)"></textarea></div>
@@ -199,6 +236,7 @@
             <label class="pill"><input type="checkbox" id="tagUrgente"> Urgente</label>
             <label class="pill"><input type="checkbox" id="tagCronico"> Crónico</label>
             <label class="pill"><input type="checkbox" id="tagPrueba"> En prueba</label>
+            <label class="pill"><input type="checkbox" id="tagPRN"> Cuando sea necesario</label>
           </div>
         </div>
         <div class="field"><label>Próxima toma</label>
@@ -207,6 +245,27 @@
             <span class="hint">(opcional, para recordatorios)</span>
           </div>
         </div>
+
+        <!-- CALCULADORA DE POSOLOGÍA -->
+        <div class="field">
+          <label>Calculadora de posología (edad/peso)</label>
+          <div class="row" style="gap:6px">
+            <input id="calcPeso" type="number" min="0" step="0.1" placeholder="Peso (kg)" style="max-width:120px">
+            <input id="calcEdad" type="number" min="0" step="1" placeholder="Edad (años)" style="max-width:120px">
+            <input id="calcMgKg" type="number" min="0" step="0.1" placeholder="Dosis (mg/kg)" style="max-width:140px">
+            <input id="calcIntervalo" type="number" min="1" step="1" placeholder="Intervalo (h)" style="max-width:140px">
+            <input id="calcMax" type="number" min="0" step="1" placeholder="Máx por toma (mg)" style="max-width:160px">
+          </div>
+          <div class="row" style="gap:6px">
+            <input id="calcConc" type="number" min="0" step="0.1" placeholder="Concentración (mg/ml)" style="max-width:160px">
+            <input id="calcComp" type="number" min="0" step="1" placeholder="Comprimido (mg/unid)" style="max-width:180px">
+            <button class="btn" id="btnCalc" type="button">Calcular</button>
+            <button class="btn primary" id="btnAplicarCalc" type="button" title="Enviar al campo Posología">Aplicar a posología</button>
+          </div>
+          <div id="calcResultado" class="hint"></div>
+          <div class="hint">⚠️ Orientativo. Para decisiones médicas, consulta siempre a un profesional sanitario.</div>
+        </div>
+
         <div class="field"><label>Fotografías</label>
           <input type="file" id="medPhotos" accept="image/*" multiple />
           <div class="hint">Se redimensionan automáticamente (máx 1200px) para ahorrar espacio.</div>
@@ -215,37 +274,36 @@
         </div>
       </div>
       <div class="ft">
-        <button class="btn danger" id="btnArchive">Finalizar y archivar</button>
-        <button class="btn" id="btnCancelEdit">Cancelar</button>
-        <button class="btn primary" id="btnSaveMed">Guardar</button>
+        <button class="btn danger" id="btnArchive" type="button">Finalizar y archivar</button>
+        <button class="btn" id="btnCancelEdit" type="button">Cancelar</button>
+        <button class="btn primary" id="btnSaveMed" type="button">Guardar</button>
       </div>
     </div>
   </div>
 
   <div class="modal" id="folderModal" role="dialog" aria-modal="true">
     <div class="dialog">
-      <div class="hd">Carpeta <button class="btn" id="closeFolderModal">✕</button></div>
+      <div class="hd">Carpeta <button class="btn" id="closeFolderModal" type="button">✕</button></div>
       <div class="bd"><div class="field"><label>Nombre</label><input id="folderName" placeholder="Ej. Antibióticos"/></div></div>
       <div class="ft">
-        <button class="btn" id="btnCancelFolder">Cancelar</button>
-        <button class="btn primary" id="btnSaveFolder">Guardar</button>
+        <button class="btn" id="btnCancelFolder" type="button">Cancelar</button>
+        <button class="btn primary" id="btnSaveFolder" type="button">Guardar</button>
       </div>
     </div>
   </div>
 
   <div class="modal" id="trashModal" role="dialog" aria-modal="true">
     <div class="dialog">
-      <div class="hd">Papelera <button class="btn" id="closeTrashModal">✕</button></div>
+      <div class="hd">Papelera <button class="btn" id="closeTrashModal" type="button">✕</button></div>
       <div class="bd" id="trashBody"></div>
       <div class="ft">
-        <button class="btn danger" id="btnPurgeAll">Eliminar definitivamente</button>
-        <button class="btn" id="btnCloseTrash">Cerrar</button>
+        <button class="btn danger" id="btnPurgeAll" type="button">Eliminar definitivamente</button>
+        <button class="btn" id="btnCloseTrash" type="button">Cerrar</button>
       </div>
     </div>
   </div>
 
   <input type="file" id="fileInput" accept="application/json" style="display:none"/>
-  <!-- Backdrop para el drawer -->
   <div id="backdrop" class="backdrop"></div>
 
   <script>
@@ -255,47 +313,6 @@
   const uid = (p='id') => p + '_' + Math.random().toString(36).slice(2,9);
   const confirmBox = msg => window.confirm(msg);
 
-  // ===== Manifest + Icono (frasco dibujado por canvas) =====
-  (function makeManifest(){
-    const sizes=[192,512];
-    const icons=sizes.map(s=>({src:makeIcon(s),sizes:s+'x'+s,type:'image/png',purpose:'any maskable'}));
-    const m={name:'Botiquín · Gestor de Medicamentos',short_name:'Botiquín',description:'Gestor y biblioteca de medicamentos con recordatorios y fotos.',start_url:'.',scope:'.',display:'standalone',background_color:getComputedStyle(document.documentElement).getPropertyValue('--panel').trim()||'#151925',theme_color:getComputedStyle(document.documentElement).getPropertyValue('--panel').trim()||'#151925',icons};
-    const url=URL.createObjectURL(new Blob([JSON.stringify(m)],{type:'application/json'}));
-    const link=document.createElement('link'); link.rel='manifest'; link.href=url; document.head.appendChild(link);
-    function makeIcon(size){const c=document.createElement('canvas'); c.width=c.height=size; const ctx=c.getContext('2d');
-      ctx.fillStyle='#0f1115'; ctx.fillRect(0,0,size,size);
-      ctx.shadowColor='rgba(0,0,0,.25)'; ctx.shadowBlur=size*0.06; ctx.shadowOffsetY=size*0.02;
-      rr(ctx,size*0.28,size*0.16,size*0.44,size*0.14,size*0.04); ctx.fillStyle='#5dd5c4'; ctx.fill();
-      rr(ctx,size*0.34,size*0.28,size*0.32,size*0.08,size*0.04); ctx.fillStyle='#7ee6da'; ctx.fill();
-      ctx.lineWidth=Math.max(2,size*0.04); ctx.strokeStyle='#a78bfa'; ctx.fillStyle='rgba(167,139,250,.10)';
-      rr(ctx,size*0.22,size*0.36,size*0.56,size*0.48,size*0.12); ctx.fill(); ctx.stroke();
-      rr(ctx,size*0.30,size*0.46,size*0.40,size*0.20,size*0.08); ctx.fillStyle='rgba(93,213,196,.25)'; ctx.fill();
-      ctx.fillStyle='#5dd5c4'; const w=size*0.08, cx=size/2; ctx.fillRect(cx-w/2,size*0.50,w,size*0.12); ctx.fillRect(cx-size*0.06,size*0.55,size*0.12,w);
-      function rr(ctx,x,y,w,h,r){ctx.beginPath();ctx.moveTo(x+r,y);ctx.arcTo(x+w,y,x+w,y+h,r);ctx.arcTo(x+w,y+h,x,y+h,r);ctx.arcTo(x,y+h,x,y,r);ctx.arcTo(x,y,x+w,y,r);ctx.closePath();}
-      return c.toDataURL('image/png');}
-  })();
-
-  // ===== Service Worker =====
-  (async function registerSW(){
-    if(!('serviceWorker' in navigator)) return;
-    try{
-      const swCode=`const CACHE='botiquin-cache-v4';
-self.addEventListener('install',e=>{e.waitUntil(caches.open(CACHE).then(c=>c.addAll(['./'])))});
-self.addEventListener('activate',e=>{e.waitUntil(caches.keys().then(keys=>Promise.all(keys.filter(k=>k!==CACHE).map(k=>caches.delete(k)))))});
-self.addEventListener('fetch',event=>{
-  const req=event.request;
-  if(req.method!=='GET' || new URL(req.url).origin!==self.location.origin) return;
-  event.respondWith(caches.match(req).then(r=>r||fetch(req).then(x=>{const cl=x.clone(); caches.open(CACHE).then(c=>c.put(req,cl)); return x;}).catch(()=>caches.match('./'))));
-});`;
-      const url=URL.createObjectURL(new Blob([swCode],{type:'text/javascript'}));
-      await navigator.serviceWorker.register(url);
-    }catch(e){ console.warn('SW no disponible', e); }
-  })();
-
-  if(location.protocol!=='https:' && location.hostname!=='localhost'){
-    setTimeout(()=> toast('Para instalar como PWA: usa HTTPS (GitHub Pages) o localhost.'), 600);
-  }
-
   // ===== Estado y persistencia =====
   const STORAGE_KEY='botiquin.v2';
   let state={
@@ -303,7 +320,8 @@ self.addEventListener('fetch',event=>{
     meds:[],
     trash:{meds:[],folders:[]},
     view:'cards', sort:'name', theme:'dark', activeFolder:'all',
-    selectMode:false, selected:new Set(), lastSaved:Date.now()
+    selectMode:false, selected:new Set(), lastSaved:Date.now(),
+    collapsed:{}
   };
   const history={undo:[],redo:[],push(){this.undo.push(JSON.stringify(state)); if(this.undo.length>50) this.undo.shift(); this.redo.length=0;},
     canUndo(){return this.undo.length>0}, canRedo(){return this.redo.length>0},
@@ -315,7 +333,7 @@ self.addEventListener('fetch',event=>{
 
   // ===== Temas =====
   const THEMES=['dark','light','olive','aqua','amethyst','solar'];
-  function applyTheme(name){document.body.classList.remove(...THEMES.map(t=>'theme-'+t)); if(name!=='dark') document.body.classList.add('theme-'+name); state.theme=name; save(); const m=document.querySelector('meta[name="theme-color"]'); if(m) m.setAttribute('content', getComputedStyle(document.documentElement).getPropertyValue('--panel').trim());}
+  function applyTheme(name){document.body.classList.remove(...THEMES.map(t=>'theme-'+t)); if(name!=='dark') document.body.classList.add('theme-'+name); state.theme=name||'dark'; const m=document.querySelector('meta[name="theme-color"]'); if(m) m.setAttribute('content', getComputedStyle(document.documentElement).getPropertyValue('--panel').trim()); save();}
 
   // ===== Carpetas =====
   function addFolder(name){history.push(); const id=uid('fld'); state.folders.push({id,name,order:Date.now()}); save(); renderFolders(); renderAll(); return id;}
@@ -324,7 +342,7 @@ self.addEventListener('fetch',event=>{
   let draggingFolderId=null;
   function renderFolders(){const list=$('#folderList'); list.innerHTML=''; state.folders.sort((a,b)=> (a.id==='all')?-1:(b.id==='all')?1:a.order-b.order);
     state.folders.forEach(f=>{const el=document.createElement('div'); el.className='folder'+(f.id===state.activeFolder?' active':''); el.draggable=f.id!=='all'; el.dataset.id=f.id;
-      el.innerHTML=`<span class="folder-name">${f.name}</span><div class="folder-actions">${f.id!=='all'?'<button class="btn btnFolderRename" title="Renombrar">✎</button>':''}${f.id!=='all'?'<button class="btn btnFolderDelete" title="Eliminar">🗑</button>':''}</div>`;
+      el.innerHTML=`<span class="folder-name" data-ink>${f.name}</span><div class="folder-actions">${f.id!=='all'?'<button class="btn btnFolderRename" type="button" title="Renombrar">✎</button>':''}${f.id!=='all'?'<button class="btn btnFolderDelete" type="button" title="Eliminar">🗑</button>':''}</div>`;
       el.addEventListener('click',e=>{if(e.target.closest('.btn')) return; state.activeFolder=f.id; renderAll(); save();});
       if(f.id!=='all'){el.addEventListener('dragstart',()=>{draggingFolderId=f.id; el.style.opacity=.5;}); el.addEventListener('dragend',()=>{draggingFolderId=null; el.style.opacity=1;});
         el.addEventListener('dragover',e=>{e.preventDefault(); el.style.outline='2px dashed var(--primary)';});
@@ -354,39 +372,80 @@ self.addEventListener('fetch',event=>{
 
   // ===== Render =====
   function currentMeds(){let meds=state.meds.filter(m=>!m.archived); if(state.activeFolder!=='all') meds=meds.filter(m=>m.folderId===state.activeFolder); const q=$('#searchInput').value.trim().toLowerCase(); if(q) meds=meds.filter(m=>(m.name+' '+(m.dose||'')+' '+(m.person||'')).toLowerCase().includes(q)); meds.sort((a,b)=>{switch(state.sort){case'person':return (a.person||'').localeCompare(b.person||'')||a.name.localeCompare(b.name);case'updated':return (b.updated||0)-(a.updated||0);case'nextDose':return (a.nextDose||Infinity)-(b.nextDose||Infinity);default:return a.name.localeCompare(b.name);}}); return meds;}
-  function renderAll(){renderFolders(); renderBreadcrumb(); if(state.view==='cards'){renderCards(); $('#cardsView').style.display='grid'; $('#tableView').style.display='none';} else {renderTable(); $('#cardsView').style.display='none'; $('#tableView').style.display='block';} updateSelectionUI(); updateUndoRedoUI(); populateFolderSelect();}
+  function renderAll(){
+    renderFolders(); renderBreadcrumb();
+    const v = state.view || 'cards';
+    $('#cardsView').style.display = (v==='cards') ? 'grid' : 'none';
+    $('#listView').style.display  = (v==='list')  ? 'flex' : 'none';
+    $('#tableView').style.display = (v==='table') ? 'block' : 'none';
+    if(v==='cards') renderCards();
+    else if(v==='list') renderList();
+    else renderTable();
+    updateSelectionUI(); updateUndoRedoUI(); populateFolderSelect();
+  }
   function renderBreadcrumb(){const f=state.folders.find(x=>x.id===state.activeFolder); $('#breadcrumb').textContent=`Carpeta: ${f?f.name:'(desconocida)'} • ${currentMeds().length} elementos`;}
-  function renderCards(){const wrap=$('#cardsView'); wrap.innerHTML=''; currentMeds().forEach(m=>{const card=document.createElement('div'); card.className='card'+(state.selectMode?' select-mode':''); card.dataset.id=m.id; attachCardDrag(card,m.id); card.addEventListener('dblclick',()=>editMed(m.id)); const checked=state.selected.has(m.id); const photos=(m.photos||[]).slice(0,4).map(src=>`<span class="thumb"><img src="${src}" alt="foto"/></span>`).join(''); card.innerHTML=`
+
+  function tagBadges(m){return `
+    <span class="tag">${m.dose||'—'}</span>
+    ${m.tags?.includes('urgente')?'<span class="tag" style="border-color:var(--danger);color:var(--danger)">Urgente</span>':''}
+    ${m.tags?.includes('cronico')?'<span class="tag" style="border-color:var(--warning);color:var(--warning)">Crónico</span>':''}
+    ${m.tags?.includes('prueba')?'<span class="tag" style="border-color:var(--accent);color:var(--accent)">En prueba</span>':''}
+    ${m.tags?.includes('prn')?'<span class="tag" style="border-color:var(--success);color:var(--success)">Cuando sea necesario</span>':''}
+    ${m.nextDose?'<span class="tag">⏰ '+new Date(m.nextDose).toLocaleString()+'</span>':''}`;}
+
+  function actionButtons(id){return `
+      <button class="btn" data-edit="${id}" type="button">Editar</button>
+      <button class="btn" data-copy="${id}" type="button">Copiar</button>
+      <button class="btn" data-dup="${id}" type="button">Duplicar</button>
+      <button class="btn danger" data-del="${id}" type="button">Eliminar</button>`;}
+
+  function renderCards(){const wrap=$('#cardsView'); wrap.innerHTML=''; currentMeds().forEach(m=>{const card=document.createElement('div'); const collapsed=!!state.collapsed[m.id]; card.className='card'+(state.selectMode?' select-mode':'')+(collapsed?' collapsed':''); card.dataset.id=m.id; attachCardDrag(card,m.id);
+      card.addEventListener('dblclick',()=>{state.collapsed[m.id]=!state.collapsed[m.id]; save(); renderAll();});
+      const checked=state.selected.has(m.id); const photos=(m.photos||[]).slice(0,4).map(src=>`<span class="thumb"><img src="${src}" alt="foto"/></span>`).join(''); card.innerHTML=`
         <div class="card-header">
           <label class="checkbox"><input type="checkbox" ${checked?'checked':''} data-sel="${m.id}"></label>
-          <div class="title" title="${m.name}">${m.name}</div>
+          <div class="title" title="${m.name}" data-ink>${m.name}</div>
           <div class="person" title="Persona asignada">${m.person||'—'}</div>
         </div>
-        ${photos?`<div class="photos">${photos}</div>`:''}
-        <div class="desc">${m.desc||'—'}</div>
-        <div class="meta">
-          <span class="tag">${m.dose||'—'}</span>
-          ${m.tags?.includes('urgente')?'<span class="tag" style="border-color:var(--danger);color:var(--danger)">Urgente</span>':''}
-          ${m.tags?.includes('cronico')?'<span class="tag" style="border-color:var(--warning);color:var(--warning)">Crónico</span>':''}
-          ${m.tags?.includes('prueba')?'<span class="tag" style="border-color:var(--accent);color:var(--accent)">En prueba</span>':''}
-          ${m.nextDose?`<span class="tag">⏰ ${new Date(m.nextDose).toLocaleString()}</span>`:''}
-        </div>
+        ${photos?'<div class="photos">'+photos+'</div>':''}
+        <div class="desc" data-ink>${m.desc||'—'}</div>
+        <div class="meta" data-ink>${tagBadges(m)}</div>
         <div class="row">
           <select data-move="${m.id}" title="Mover a carpeta">
             ${state.folders.map(f=>`<option value="${f.id}" ${m.folderId===f.id?'selected':''}>${f.name}</option>`).join('')}
           </select>
           <span class="spacer"></span>
-          <button class="btn" data-copy="${m.id}">Copiar</button>
-          <button class="btn" data-dup="${m.id}">Duplicar</button>
-          <button class="btn danger" data-del="${m.id}">🗑</button>
+          ${actionButtons(m.id)}
         </div>`; wrap.appendChild(card);});}
+
+  function renderList(){const wrap=$('#listView'); wrap.innerHTML=''; currentMeds().forEach(m=>{const card=document.createElement('div'); const collapsed=!!state.collapsed[m.id]; card.className='card'+(state.selectMode?' select-mode':'')+(collapsed?' collapsed':''); card.dataset.id=m.id; attachCardDrag(card,m.id);
+      card.addEventListener('dblclick',()=>{state.collapsed[m.id]=!state.collapsed[m.id]; save(); renderAll();});
+      const checked=state.selected.has(m.id); card.innerHTML=`
+        <div>
+          <div class="card-header">
+            <label class="checkbox"><input type="checkbox" ${checked?'checked':''} data-sel="${m.id}"></label>
+            <div class="title" title="${m.name}" data-ink>${m.name}</div>
+            <div class="person">${m.person||'—'}</div>
+          </div>
+          <div class="desc" data-ink>${m.desc||'—'}</div>
+          <div class="meta" data-ink>${tagBadges(m)}</div>
+        </div>
+        <div class="row" style="justify-content:flex-end">${actionButtons(m.id)}</div>`; wrap.appendChild(card);});}
+
   function renderTable(){const meds=currentMeds(); const wrap=$('#tableView'); const rows=meds.map(m=>`<tr data-id="${m.id}">
       <td><label class="checkbox ${state.selectMode?'':'" style=\\"display:none\\"'}"><input type="checkbox" ${state.selected.has(m.id)?'checked':''} data-sel="${m.id}"></label></td>
       <td>${m.name}</td><td>${m.dose||'—'}</td><td>${m.person||'—'}</td><td>${m.desc||'—'}</td><td>${m.nextDose?new Date(m.nextDose).toLocaleString():'—'}</td>
-      <td><button class="btn" data-copy="${m.id}">Copiar</button> <button class="btn" data-dup="${m.id}">Duplicar</button> <button class="btn danger" data-del="${m.id}">Eliminar</button></td>
-    </tr>`).join(''); wrap.innerHTML=`<table class="table"><thead><tr><th></th><th>Nombre</th><th>Frecuencia</th><th>Persona</th><th>Descripción</th><th>Próxima toma</th><th>Acciones</th></tr></thead><tbody>${rows}</tbody></table>`; wrap.querySelectorAll('tr[data-id]').forEach(tr=>tr.addEventListener('dblclick',()=>editMed(tr.dataset.id)));}
+      <td><button class="btn" data-edit="${m.id}" type="button">Editar</button> <button class="btn" data-copy="${m.id}" type="button">Copiar</button> <button class="btn" data-dup="${m.id}" type="button">Duplicar</button> <button class="btn danger" data-del="${m.id}" type="button">Eliminar</button></td>
+    </tr>`).join(''); wrap.innerHTML=`<table class="table"><thead><tr><th></th><th>Nombre</th><th>Frecuencia</th><th>Persona</th><th>Descripción</th><th>Próxima toma</th><th>Acciones</th></tr></thead><tbody>${rows}</tbody></table>`;}
+
   function updateSelectionUI(){document.body.classList.toggle('select-mode',state.selectMode); $('#btnDeleteSelected').disabled=state.selected.size===0; $('#selectedCount').textContent=`${state.selected.size} seleccionados`; $('#btnSelectMode').textContent=state.selectMode?'Salir selección':'Seleccionar';}
   function updateUndoRedoUI(){$('#btnUndo').disabled=!history.canUndo(); $('#btnRedo').disabled=!history.canRedo();}
+
+  // ===== Folder Modal =====
+  let editingFolderId=null;
+  function openFolderModal(id){ editingFolderId=id||null; const input=$('#folderName'); input.value=id?(state.folders.find(f=>f.id===id)?.name||''):''; $('#folderModal').classList.add('open'); setTimeout(()=> input.focus(), 30); }
+  function closeFolderModal(){ $('#folderModal').classList.remove('open'); editingFolderId=null; }
+  function saveFolderFromModal(){ const name=$('#folderName').value.trim(); if(!name) return alert('Pon un nombre para la carpeta'); if(editingFolderId){updateFolder(editingFolderId,name);} else {const newId=addFolder(name); state.activeFolder=newId;} save(); renderAll(); closeFolderModal(); }
 
   // ===== Eventos =====
   function bindEvents(){
@@ -404,8 +463,22 @@ self.addEventListener('fetch',event=>{
     $('#btnTrash').addEventListener('click',openTrashModal);
     $('#btnEmptyTrash').addEventListener('click',()=>{if(confirmBox('¿Vaciar por completo la papelera?')){history.push(); state.trash.meds=[]; state.trash.folders=[]; save();}});
     $('#searchInput').addEventListener('input',()=>renderAll());
+
+    // sincroniza selectores con estado
+    $('#viewSelect').value=state.view||'cards';
     $('#viewSelect').addEventListener('change',e=>{state.view=e.target.value; save(); renderAll();});
+    $('#sortSelect').value=state.sort||'name';
     $('#sortSelect').addEventListener('change',e=>{state.sort=e.target.value; save(); renderAll();});
+
+    // Carpeta modal
+    document.addEventListener('click',e=>{
+      if(e.target.id==='closeFolderModal' || e.target.id==='btnCancelFolder') closeFolderModal();
+      if(e.target.id==='btnSaveFolder') saveFolderFromModal();
+    });
+    $('#folderModal').addEventListener('keydown',e=>{
+      if(e.key==='Enter'){ e.preventDefault(); saveFolderFromModal(); }
+      if(e.key==='Escape'){ e.preventDefault(); closeFolderModal(); }
+    });
 
     document.addEventListener('keydown',e=>{
       if((e.ctrlKey||e.metaKey)&&e.key.toLowerCase()==='z'){e.preventDefault(); if(e.shiftKey)history.doRedo(); else history.doUndo();}
@@ -415,58 +488,150 @@ self.addEventListener('fetch',event=>{
     });
 
     document.body.addEventListener('change',e=>{
-      const sel=e.target.getAttribute('data-sel'); if(sel){if(e.target.checked) state.selected.add(sel); else state.selected.delete(sel); updateSelectionUI(); save();}
-      const move=e.target.getAttribute('data-move'); if(move){history.push(); const m=state.meds.find(x=>x.id===move); if(m){m.folderId=e.target.value; m.updated=Date.now(); save();}}
+      const selId = e.target.getAttribute('data-sel');
+      if(selId){ if(e.target.checked) state.selected.add(selId); else state.selected.delete(selId); updateSelectionUI(); save(); return; }
+      const moveId = e.target.getAttribute('data-move');
+      if(moveId){ history.push(); const m=state.meds.find(x=>x.id===moveId); if(m){m.folderId=e.target.value; m.updated=Date.now(); save();} }
     });
 
     document.body.addEventListener('click',e=>{
-      const idCopy=e.target.getAttribute('data-copy'); if(idCopy) copyMed(idCopy);
-      const idDup=e.target.getAttribute('data-dup'); if(idDup) duplicateMed(idDup);
-      const idDel=e.target.getAttribute('data-del'); if(idDel && confirmBox('¿Eliminar este medicamento?')) removeMed(idDel);
-      const rn=e.target.closest('.btnFolderRename'); if(rn){const id=rn.closest('.folder').dataset.id; openFolderModal(id);}
-      const dl=e.target.closest('.btnFolderDelete'); if(dl){const id=dl.closest('.folder').dataset.id; if(confirmBox('¿Eliminar carpeta?')) deleteFolder(id);}
+      const editBtn = e.target.closest('button[data-edit]'); if(editBtn){ editMed(editBtn.getAttribute('data-edit')); return; }
+      const copyBtn = e.target.closest('button[data-copy]'); if(copyBtn){ copyMed(copyBtn.getAttribute('data-copy')); return; }
+      const dupBtn = e.target.closest('button[data-dup]'); if(dupBtn){ duplicateMed(dupBtn.getAttribute('data-dup')); return; }
+      const delBtn = e.target.closest('button[data-del]'); if(delBtn){ if(confirmBox('¿Eliminar este medicamento?')) removeMed(delBtn.getAttribute('data-del')); return; }
+
+      const rn=e.target.closest('.btnFolderRename'); if(rn){const id=rn.closest('.folder').dataset.id; openFolderModal(id); return;}
+      const dl=e.target.closest('.btnFolderDelete'); if(dl){const id=dl.closest('.folder').dataset.id; if(confirmBox('¿Eliminar carpeta?')) deleteFolder(id); return;}
     });
 
-    // mover tarjetas a carpeta activa soltando en el panel
+    // drop a carpeta activa
     $('#cardsView').addEventListener('dragover',e=>e.preventDefault());
     $('#cardsView').addEventListener('drop',e=>{const ids=(e.dataTransfer?.getData('text/med-ids')||'').split(',').filter(Boolean); if(!ids.length) return; history.push(); ids.forEach(id=>{const m=state.meds.find(x=>x.id===id); if(m) m.folderId=state.activeFolder;}); save(); renderAll();});
 
-    // drag & drop de fotos en el modal
+    // drag & drop de fotos
     const modal=$('#medModal');
     modal.addEventListener('dragover',e=>{if(e.target.closest('#medPhotosPreview')) e.preventDefault();});
-    modal.addEventListener('drop',async e=>{if(!e.target.closest('#medPhotosPreview')) return; e.preventDefault(); const files=[...e.dataTransfer.files].filter(f=>f.type.startsWith('image/')); await previewPhotos(files);});
-    $('#medPhotos').addEventListener('change',async e=>{const files=[...e.target.files]; await previewPhotos(files);});
+    modal.addEventListener('drop',async e=>{if(!e.target.closest('#medPhotosPreview')) return; e.preventDefault(); const files=[...e.dataTransfer.files].filter(f=>f.type.startsWith('image/') ); await previewPhotos(files);});
 
-    // ===== Drawer móvil =====
+    // Drawer móvil
     $('#btnMenu')?.addEventListener('click',()=>{ $('#sidebar').classList.add('open'); $('#backdrop').classList.add('show'); });
     $('#backdrop')?.addEventListener('click',closeSidebar);
+
+    // Calculadora
+    $('#btnCalc').addEventListener('click',calcPosologia);
+    $('#btnAplicarCalc').addEventListener('click',()=>{
+      const r = $('#calcResultado')?.dataset.texto || '';
+      if(!r) return;
+      const prev = ($('#medDose').value||'').trim();
+      $('#medDose').value = prev ? (prev + ' • ' + r) : r;
+    });
   }
   function closeSidebar(){ $('#sidebar').classList.remove('open'); $('#backdrop').classList.remove('show'); }
 
   // Portapapeles
   async function copyMed(id){const m=state.meds.find(x=>x.id===id); if(!m) return; const txt=`${m.name}\n${m.dose||''}\n${m.person||''}\n${m.desc||''}`.trim(); try{await navigator.clipboard.writeText(txt); toast('Copiado en el portapapeles');}catch{alert('No se pudo copiar');}}
-  function toast(msg){const t=document.createElement('div'); t.textContent=msg; Object.assign(t.style,{position:'fixed',bottom:'16px',right:'16px',background:'var(--card)',border:'1px solid var(--border)',padding:'10px 12px',borderRadius:'10px',boxShadow:'var(--shadow)',zIndex:9999}); document.body.appendChild(t); setTimeout(()=>t.remove(),1800);}
+  function toast(msg){const t=document.createElement('div'); t.textContent=msg; Object.assign(t.style,{position:'fixed',bottom:'16px',right:'16px',background:'var(--card)',border:'1px solid var(--border)',padding:'10px 12px',borderRadius:'10px',boxShadow:'var(--shadow)',zIndex:9999,color:'var(--text)'}); document.body.appendChild(t); setTimeout(()=>t.remove(),1800);}
 
   // Fotos
-  let tempPhotos=[];
+  let tempPhotos=[]; let existingPhotos=[];
   async function previewPhotos(files){for(const f of files){if(!f.type.startsWith('image/')) continue; const data=await fileToResizedDataURL(f,1200); tempPhotos.push(data);} paintPhotosPreview();}
-  function paintPhotosPreview(existing=[]){const box=$('#medPhotosPreview'); box.innerHTML=''; [...existing,...tempPhotos].forEach((src,i)=>{const d=document.createElement('div'); d.className='thumb'; d.innerHTML=`<img src="${src}" alt="foto"/><button class="btn danger" data-delphoto="${i}" style="position:absolute; transform:translate(38px,-30px)">✕</button>`; d.style.position='relative'; box.appendChild(d);}); box.querySelectorAll('[data-delphoto]').forEach(b=>b.addEventListener('click',()=>{const i=+b.getAttribute('data-delphoto'); tempPhotos.splice(i,1); paintPhotosPreview(existing);}));}
+  function paintPhotosPreview(){const box=$('#medPhotosPreview'); box.innerHTML='';
+    existingPhotos.forEach((src,i)=>{const d=document.createElement('div'); d.className='thumb'; d.innerHTML=`<img src="${src}" alt="foto"/><button class="btn danger x" data-delphoto-ex="${i}" type="button">✕</button>`; box.appendChild(d);});
+    tempPhotos.forEach((src,i)=>{const d=document.createElement('div'); d.className='thumb'; d.innerHTML=`<img src="${src}" alt="foto"/><button class="btn danger x" data-delphoto-tmp="${i}" type="button">✕</button>`; box.appendChild(d);});
+    box.querySelectorAll('[data-delphoto-ex]').forEach(b=>b.addEventListener('click',()=>{const i=+b.getAttribute('data-delphoto-ex'); existingPhotos.splice(i,1); paintPhotosPreview();}));
+    box.querySelectorAll('[data-delphoto-tmp]').forEach(b=>b.addEventListener('click',()=>{const i=+b.getAttribute('data-delphoto-tmp'); tempPhotos.splice(i,1); paintPhotosPreview();}));
+  }
   async function fileToResizedDataURL(file,maxSide=1200){const img=await new Promise(res=>{const r=new FileReader(); r.onload=()=>{const i=new Image(); i.onload=()=>res(i); i.src=r.result;}; r.readAsDataURL(file);}); const scale=Math.min(1,maxSide/Math.max(img.width,img.height)); const w=Math.round(img.width*scale), h=Math.round(img.height*scale); const c=document.createElement('canvas'); c.width=w; c.height=h; const ctx=c.getContext('2d'); ctx.fillStyle='#fff'; ctx.fillRect(0,0,w,h); ctx.drawImage(img,0,0,w,h); return c.toDataURL('image/jpeg',0.85);}
 
-  // Modales
-  function openMedModal(id){tempPhotos=[]; const m=id?state.meds.find(x=>x.id===id):{name:'',desc:'',dose:'',person:'',folderId:state.activeFolder,tags:[],nextDose:null,photos:[]}; $('#medName').value=m.name||''; $('#medDesc').value=m.desc||''; $('#medDose').value=m.dose||''; $('#medPerson').value=m.person||''; $('#medNext').value=m.nextDose?new Date(m.nextDose).toISOString().slice(0,16):''; populateFolderSelect(); $('#medFolder').value=m.folderId||state.activeFolder; $('#tagUrgente').checked=m.tags?.includes('urgente'); $('#tagCronico').checked=m.tags?.includes('cronico'); $('#tagPrueba').checked=m.tags?.includes('prueba'); paintPhotosPreview(m.photos||[]); $('#medModal').classList.add('open');}
-  function closeMedModal(){$('#medModal').classList.remove('open'); tempPhotos=[];}
+  // Calculadora de posología (simple)
+  function calcPosologia(){
+    const peso=parseFloat($('#calcPeso').value||'0');
+    const edad=parseFloat($('#calcEdad').value||'0');
+    const mgkg=parseFloat($('#calcMgKg').value||'0');
+    const intervalo=parseFloat($('#calcIntervalo').value||'0');
+    const max=parseFloat($('#calcMax').value||'0');
+    const conc=parseFloat($('#calcConc').value||'0'); // mg/ml
+    const comp=parseFloat($('#calcComp').value||'0'); // mg/unidad
+
+    if(!(peso>0 && mgkg>0 && intervalo>0)){
+      $('#calcResultado').textContent='Completa al menos: peso, mg/kg e intervalo.';
+      $('#calcResultado').dataset.texto='';
+      return;
+    }
+    let dosis = peso * mgkg; // mg por toma
+    if(max>0) dosis = Math.min(dosis, max);
+    function roundTo(x, step){ if(!step) return Math.round(x); return Math.round(x/step)*step; }
+
+    let texto = `${roundTo(dosis,5)} mg cada ${intervalo} h`;
+    if(conc>0){
+      const ml = dosis/conc;
+      texto += ` (${(Math.round(ml*10)/10)} ml)`;
+    }
+    if(comp>0){
+      const tabs = dosis/comp;
+      const tabsR = Math.round(tabs*2)/2; // a medios comprimidos
+      texto += ` • ${tabsR} comp.`;
+    }
+    if(edad>0) texto += ` (edad: ${edad} años)`;
+
+    $('#calcResultado').textContent=texto;
+    $('#calcResultado').dataset.texto=texto;
+  }
+
+  // Modales de medicamentos
+  function openMedModal(id){
+    tempPhotos=[];
+    const m=id?state.meds.find(x=>x.id===id):{name:'',desc:'',dose:'',person:'',folderId:state.activeFolder,tags:[],nextDose:null,photos:[]};
+    existingPhotos = (m.photos||[]).slice();
+    $('#medName').value=m.name||'';
+    $('#medDesc').value=m.desc||'';
+    $('#medDose').value=m.dose||'';
+    $('#medPerson').value=m.person||'';
+    $('#medNext').value=m.nextDose?new Date(m.nextDose).toISOString().slice(0,16):'';
+    populateFolderSelect(); $('#medFolder').value=m.folderId||state.activeFolder;
+    $('#tagUrgente').checked=m.tags?.includes('urgente');
+    $('#tagCronico').checked=m.tags?.includes('cronico');
+    $('#tagPrueba').checked=m.tags?.includes('prueba');
+    $('#tagPRN').checked=m.tags?.includes('prn');
+    paintPhotosPreview();
+    $('#medModal').classList.add('open');
+  }
+  function closeMedModal(){$('#medModal').classList.remove('open'); tempPhotos=[]; existingPhotos=[]; $('#calcResultado').textContent=''; $('#calcResultado').dataset.texto='';}
   function populateFolderSelect(){const sel=$('#medFolder'); if(!sel) return; sel.innerHTML=state.folders.map(f=>`<option value="${f.id}">${f.name}</option>`).join('');}
   document.addEventListener('click',e=>{if(e.target.id==='closeMedModal'||e.target.id==='btnCancelEdit') closeMedModal();});
-  document.addEventListener('click',e=>{if(e.target.id==='btnSaveMed'){const data={name:$('#medName').value.trim(),desc:$('#medDesc').value.trim(),dose:$('#medDose').value.trim(),person:$('#medPerson').value.trim(),folderId:$('#medFolder').value,tags:[$('#tagUrgente').checked&&'urgente',$('#tagCronico').checked&&'cronico',$('#tagPrueba').checked&&'prueba'].filter(Boolean),nextDose:$('#medNext').value?new Date($('#medNext').value).getTime():null}; if(!data.name) return alert('Pon un nombre de medicamento'); history.push(); if(editingMedId){const m=state.meds.find(x=>x.id===editingMedId); m.photos=(m.photos||[]).concat(tempPhotos); Object.assign(m,data,{updated:Date.now()});} else {state.meds.push({id:uid('med'),created:Date.now(),updated:Date.now(),archived:false,photos:[...tempPhotos],...data});} save(); closeMedModal(); renderAll(); scheduleCheck();} if(e.target.id==='btnArchive'){if(!editingMedId) return; setArchived(editingMedId,true); closeMedModal();}});
+  document.addEventListener('click',e=>{
+    if(e.target.id==='btnSaveMed' || e.target.id==='btnArchive'){
+      const data={
+        name:$('#medName').value.trim(),
+        desc:$('#medDesc').value.trim(),
+        dose:$('#medDose').value.trim(),
+        person:$('#medPerson').value.trim(),
+        folderId:$('#medFolder').value,
+        tags:[ $('#tagUrgente').checked&&'urgente', $('#tagCronico').checked&&'cronico', $('#tagPrueba').checked&&'prueba', $('#tagPRN').checked&&'prn' ].filter(Boolean),
+        nextDose:$('#medNext').value?new Date($('#medNext').value).getTime():null
+      };
+      if(!data.name) return alert('Pon un nombre de medicamento');
+      const archivar = (e.target.id==='btnArchive');
+      history.push();
+      if(editingMedId){
+        const m=state.meds.find(x=>x.id===editingMedId);
+        m.photos = existingPhotos.concat(tempPhotos);
+        Object.assign(m,data,{updated:Date.now(), archived: archivar ? true : m.archived});
+      } else {
+        state.meds.push({id:uid('med'),created:Date.now(),updated:Date.now(),archived:archivar,photos:existingPhotos.concat(tempPhotos),...data});
+      }
+      save(); closeMedModal(); renderAll(); scheduleCheck();
+    }
+  });
 
   // Papelera
-  function openTrashModal(){const body=$('#trashBody'); body.innerHTML=''; const meds=state.trash.meds; if(!meds.length){body.innerHTML='<div class="hint">La papelera está vacía</div>';} else {meds.forEach(m=>{const row=document.createElement('div'); row.className='row'; Object.assign(row.style,{alignItems:'center',justifyContent:'space-between',padding:'6px 0',borderBottom:'1px solid var(--border)'}); row.innerHTML=`<div><strong>${m.name}</strong><div class="hint">${m.dose||''} · ${m.person||''}</div></div><div class="row"><button class="btn" data-restore="${m.id}">Restaurar</button><button class="btn danger" data-purge="${m.id}">Eliminar</button></div>`; body.appendChild(row);});} $('#trashModal').classList.add('open');}
+  function openTrashModal(){const body=$('#trashBody'); body.innerHTML=''; const meds=state.trash.meds; if(!meds.length){body.innerHTML='<div class="hint" data-ink>La papelera está vacía</div>';} else {meds.forEach(m=>{const row=document.createElement('div'); row.className='row'; Object.assign(row.style,{alignItems:'center',justifyContent:'space-between',padding:'6px 0',borderBottom:'1px solid var(--border)'}); row.innerHTML=`<div><strong data-ink>${m.name}</strong><div class="hint" data-ink">${m.dose||''} · ${m.person||''}</div></div><div class="row"><button class="btn" data-restore="${m.id}" type="button">Restaurar</button><button class="btn danger" data-purge="${m.id}" type="button">Eliminar</button></div>`; body.appendChild(row);});} $('#trashModal').classList.add('open');}
   function closeTrashModal(){$('#trashModal').classList.remove('open');}
+  document.body.addEventListener('click',e=>{
+    const rid=e.target.closest('button[data-restore]'); if(rid){history.push(); const id=rid.getAttribute('data-restore'); const m=state.trash.meds.find(x=>x.id===id); if(m){state.meds.push(m); state.trash.meds=state.trash.meds.filter(x=>x.id!==id); save(); openTrashModal(); renderAll();} return;}
+    const pid=e.target.closest('button[data-purge]'); if(pid){if(confirmBox('¿Eliminar definitivamente?')){history.push(); const id=pid.getAttribute('data-purge'); state.trash.meds=state.trash.meds.filter(x=>x.id!==id); save(); openTrashModal();}}
+  });
   document.addEventListener('click',e=>{if(e.target.id==='closeTrashModal'||e.target.id==='btnCloseTrash') closeTrashModal();});
-  document.addEventListener('click',e=>{if(e.target.id==='btnPurgeAll'){if(confirmBox('¿Eliminar definitivamente todo?')){history.push(); state.trash.meds=[]; save(); openTrashModal(); }}});
-
-  document.body.addEventListener('click',e=>{const rid=e.target.getAttribute('data-restore'); if(rid){history.push(); const m=state.trash.meds.find(x=>x.id===rid); if(m){state.meds.push(m); state.trash.meds=state.trash.meds.filter(x=>x.id!==rid); save(); openTrashModal(); renderAll();}} const pid=e.target.getAttribute('data-purge'); if(pid){if(confirmBox('¿Eliminar definitivamente?')){history.push(); state.trash.meds=state.trash.meds.filter(x=>x.id!==pid); save(); openTrashModal();}}});
 
   // Importar/Exportar
   function doExport(){const data=JSON.stringify({...state,selected:[]},null,2); const url=URL.createObjectURL(new Blob([data],{type:'application/json'})); const a=document.createElement('a'); a.href=url; a.download='botiquin.json'; a.click(); URL.revokeObjectURL(url);}
@@ -482,10 +647,10 @@ self.addEventListener('fetch',event=>{
   function ensureDemo(){ if(state.meds.length===0){const ab=addFolder('Antibióticos'), an=addFolder('Analgésicos'), vt=addFolder('Vitaminas'); history.push(); state.meds.push(
       {id:uid('med'),name:'Amoxicilina 500 mg',desc:'Infección respiratoria. Tomar con comida. Vigilar diarrea.',dose:'Cada 8h durante 5 días',person:'Laura',folderId:ab,tags:['urgente'],photos:[],created:Date.now(),updated:Date.now()},
       {id:uid('med'),name:'Ibuprofeno 400 mg',desc:'Dolor moderado. Evitar si hay gastritis.',dose:'Cada 8h si dolor',person:'Padre',folderId:an,photos:[],created:Date.now(),updated:Date.now()},
-      {id:uid('med'),name:'Vitamina D3 2000 UI',desc:'Suplemento diario.',dose:'1 al día',person:'Bebé',folderId:vt,tags:['cronico'],photos:[],created:Date.now(),updated:Date.now()}
+      {id:uid('med'),name:'Vitamina D3 2000 UI',desc:'Suplemento diario.',dose:'1 al día',person:'Bebé',folderId:vt,tags:['cronico','prn'],photos:[],created:Date.now(),updated:Date.now()}
     ); save();}}
   function bindGlobalClicks(){document.addEventListener('click',e=>{if(!state.selectMode) return; const card=e.target.closest('.card'); if(card && !e.target.closest('button,select,.checkbox,input')){const id=card.dataset.id; if(state.selected.has(id)) state.selected.delete(id); else state.selected.add(id); updateSelectionUI(); save();}});}
-  function init(){load(); bindEvents(); ensureDemo(); renderAll(); scheduleCheck(); bindGlobalClicks(); const obs=new MutationObserver(()=>{$$('#cardsView .card').forEach(c=>attachCardDrag(c,c.dataset.id));}); obs.observe($('#cardsView'),{childList:true});}
+  function init(){load(); bindEvents(); ensureDemo(); renderAll(); scheduleCheck(); bindGlobalClicks(); const obs=new MutationObserver(()=>{$$('#cardsView .card').forEach(c=>attachCardDrag(c,c.dataset.id)); $$('#listView .card').forEach(c=>attachCardDrag(c,c.dataset.id));}); obs.observe(document.body,{childList:true,subtree:true}); }
   init();
   </script>
 </body>
