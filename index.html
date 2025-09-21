@@ -713,12 +713,21 @@ function openMedModal(id){
 
   // Eventos
   fields.photos.onchange = async (e)=>{
-    const files=Array.from(e.target.files||[]);
-    if(!files.length) return;
-    const reduced = await Promise.all(files.map(resizeImageToDataURL));
+  const files = Array.from(e.target.files||[]);
+  if(!files.length) return;
+  try{
+    const reduced = await Promise.all(files.map(f=>resizeImageToDataURL(f)));
     med.photos = [...(med.photos||[]), ...reduced];
+    med.updated = Date.now();
     renderPhotosPreview(fields.photosPreview, med.photos);
-  };
+  }catch(err){
+    console.error(err);
+    alert('No se pudieron procesar algunas imágenes.');
+  }finally{
+    // Limpia el input por si quieres volver a adjuntar las mismas
+    e.target.value = '';
+  }
+};
 
   $('#btnSaveMed').onclick = ()=>{
     if(!(fields.name.value||'').trim()){ alert('El nombre es obligatorio'); return; }
