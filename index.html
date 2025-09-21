@@ -729,21 +729,28 @@ function openMedModal(id){
   }
 };
 
-  $('#btnSaveMed').onclick = ()=>{
-    if(!(fields.name.value||'').trim()){ alert('El nombre es obligatorio'); return; }
-    history.push();
-    med.name=fields.name.value.trim();
-    med.desc=fields.desc.value.trim();
-    med.dose=fields.dose.value.trim();
-    med.person=fields.person.value.trim();
-    med.folderId=fields.folder.value;
-    med.next = toISOFromLocal(fields.next.value);
-    med.tags={urgente:fields.tUrg.checked, cronico:fields.tCro.checked, prueba:fields.tPrb.checked, prn:fields.tPrn.checked};
-    med.updated=Date.now();
-    if(isNew) state.meds.push(med);
-    modal.classList.remove('open'); showBackdrop(false);
-    save(); renderAll();
-  };
+ $('#btnSaveMed').onclick = ()=>{
+  if(!(fields.name.value||'').trim()){ alert('El nombre es obligatorio'); return; }
+  history.push();
+  med.name=fields.name.value.trim();
+  med.desc=fields.desc.value.trim();
+  med.dose=fields.dose.value.trim();
+  med.person=fields.person.value.trim();
+  med.folderId=fields.folder.value;
+  med.next = toISOFromLocal(fields.next.value);
+  med.tags={urgente:fields.tUrg.checked, cronico:fields.tCro.checked, prueba:fields.tPrb.checked, prn:fields.tPrn.checked};
+  med.updated=Date.now();
+
+  if(isNew){
+    state.meds.push(med);
+  } else {
+    const idx = state.meds.findIndex(x=>x.id===med.id);
+    if(idx>=0) state.meds[idx] = med; // ← asegura actualización
+  }
+
+  modal.classList.remove('open'); showBackdrop(false);
+  save(); renderAll();
+};
   $('#btnArchive').onclick = ()=>{
     if(!(fields.name.value||'').trim()){ alert('Pon un nombre antes de archivar.'); return; }
     history.push();
