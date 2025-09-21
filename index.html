@@ -64,11 +64,31 @@
   border-radius:14px;
   padding:12px;
   display:flex;
-  flex-direction:row;    /* <— fila: fotos izq, contenido der */
+  flex-direction:row;  /* fotos izq, contenido der por defecto */
   gap:12px;
   box-shadow:var(--shadow);
   min-width:0;
   user-select:none;
+}
+
+/* Columnas por defecto (escritorio/tablet) */
+.card .left{ flex:0 0 140px; display:flex; align-items:flex-start }
+.card .right{ flex:1; min-width:0; display:flex; flex-direction:column; gap:8px }
+
+/* Galería por defecto */
+.card .photos{ display:flex; flex-direction:column; gap:6px; flex-wrap:wrap; max-height:220px; overflow:auto; padding-right:4px }
+.card .thumb{ width:120px; height:120px }
+.card .thumb img{ width:100%; height:100%; object-fit:cover }
+
+/* --- VISTA MÓVIL: 50/50 exacto --- */
+@media (max-width: 560px){
+  .card{ align-items:stretch }                /* que ambas mitades ocupen alto completo */
+  .card .left, .card .right{ flex:0 0 50% }   /* mitad y mitad */
+  .card .photos{ flex-direction:row; flex-wrap:nowrap; gap:0; height:100%; overflow:hidden }
+  .card .photos .thumb{ width:100%; height:auto; aspect-ratio:1/1 }  /* cuadrada a todo el ancho de su mitad */
+  .card .photos .thumb img{ width:100%; height:100%; object-fit:cover }
+  .card .photos .thumb:not(:first-child){ display:none } /* en móvil, solo la 1ª foto */
+}
 }
 
 /* Columnas de la tarjeta */
