@@ -218,7 +218,33 @@
     border-color:var(--border);
     background:var(--card);
   }
+/* --- MÓVIL: imagen a la izquierda (50%) y texto a la derecha (50%) --- */
+@media (max-width: 560px){
+  .card{
+    display: grid;
+    grid-template-columns: 1fr 1fr; /* 50% / 50% */
+    align-items: stretch;
+    gap: 12px;
+  }
+  .card .left{ grid-column: 1; display:flex; align-items:stretch }
+  .card .right{ grid-column: 2; display:flex; flex-direction:column; gap:8px; min-width:0 }
 
+  .card .photos{ display:flex; flex:1; width:100%; height:100% }
+  .card .photos .thumb{
+    flex:1;
+    width:100%;
+    height:auto;
+    aspect-ratio: 1 / 1;
+    overflow: hidden;
+  }
+  .card .photos .thumb img{
+    width:100%; height:100%; object-fit:cover;
+  }
+  .card .photos .thumb:not(:first-child){ display:none }
+  .card.collapsed .left{ display:none }
+}
+
+.tag.next{ border-color:var(--primary); color:var(--primary) }
 </style>
 </head>
 <body>
