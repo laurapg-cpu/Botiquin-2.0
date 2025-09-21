@@ -668,7 +668,18 @@ function deleteFolder(id){
   state.meds.forEach(m=>{ if(m.folderId===id) m.folderId='all'; });
   renderAll(); save();
 }
-
+// Convierte 'YYYY-MM-DDTHH:MM' (local) a ISO de forma robusta (iOS seguro)
+function toISOFromLocal(localStr){
+  if(!localStr) return '';
+  try{
+    const [d,t] = localStr.split('T');
+    const [y,m,day] = d.split('-').map(n=>parseInt(n,10));
+    const [hh,mm] = (t||'').split(':').map(n=>parseInt(n,10));
+    const dt = new Date(y, (m-1), day, hh||0, mm||0);
+    if(isNaN(dt.getTime())) return '';
+    return dt.toISOString();
+  }catch(e){ return ''; }
+}
 // ====== CRUD Medicamentos ======
 let editingId=null;
 function openMedModal(id){
