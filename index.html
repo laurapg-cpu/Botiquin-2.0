@@ -589,7 +589,7 @@ return `<div class="card ${collapsed?'collapsed':''}" data-id="${m.id}" draggabl
     <div class="meta">
       <span class="tag folder" title="Carpeta">${folderIcon(folderName)} ${folderName}</span>
       ${m.dose?`<span class="tag dose" title="Posología">${m.dose}</span>`:''}
-      ${nextTag}
+      ${m.next ? `<span class="tag next" title="Próxima toma">${new Date(m.next).toLocaleString()}</span>` : ''}
       ${tags}
     </div>
     <div class="desc">${m.desc||''}</div>
@@ -599,7 +599,6 @@ return `<div class="card ${collapsed?'collapsed':''}" data-id="${m.id}" draggabl
     </div>
   </div>
 </div>`;
-
 }
 
 function renderCards(meds, isList=false){
