@@ -360,6 +360,15 @@
 const $=s=>document.querySelector(s); const $$=s=>Array.from(document.querySelectorAll(s));
 const uid=(p='id')=>p+'_'+Math.random().toString(36).slice(2,9);
 const confirmBox=msg=>window.confirm(msg);
+// --- Helpers para ignorar atajos cuando toca escribir / hay modales abiertos
+function isTypingInForm(e){
+  const t = e.target;
+  const tag = (t.tagName||'').toUpperCase();
+  return t.isContentEditable || tag==='INPUT' || tag==='TEXTAREA' || tag==='SELECT';
+}
+function anyModalOpen(){
+  return !!document.querySelector('.modal.open');
+}
 
 // ====== Estado ======
 const STORAGE_KEY='botiquin.v6'; // nueva versión unificada
@@ -929,13 +938,26 @@ els.btnTrash.addEventListener('click',openTrash);
 els.btnEmptyTrash.addEventListener('click',()=>{ if(confirmBox('¿Vaciar papelera?')){ state.trash.meds=[]; save(); }});
 
 // ====== Atajos teclado ======
-document.addEventListener('keydown',e=>{
+document.addEventListener('keydown', e=>{
+  // Si hay un modal abierto, no dispares atajos (salvo Escape para cerrar)
+  if (anyModalOpen()){
+    if (e.key === 'Escape'){
+      document.querySelectorAll('.modal.open').forEach(m=>m.classList.remove('open'));
+      showBackdrop(false);
+    }
+    return; // Ignorar el resto de atajos mientras haya modales
+  }
+
+  // Si estás escribiendo en un input/textarea/select, no dispares atajos
+  if (isTypingInForm(e)) return;
+
+  // Atajos globales (solo cuando NO escribes y NO hay modales)
   if(e.key==='/'){ e.preventDefault(); els.searchInput.focus(); return; }
-  if(e.key==='n' || (e.key==='N')){ openMedModal(null); return; }
-  if((e.ctrlKey||e.metaKey)&& e.key.toLowerCase()==='z'){ e.preventDefault(); history.doUndo(); return; }
-  if((e.ctrlKey||e.metaKey)&& (e.key.toLowerCase()==='y' || (e.shiftKey && e.key.toLowerCase()==='z'))){ e.preventDefault(); history.doRedo(); return; }
-  if(e.key==='Delete' && state.selectMode && state.selected.size){ deleteMeds([...state.selected]); }
-  if(e.key.toLowerCase()==='m'){ state.selectMode=!state.selectMode; document.body.classList.toggle('select-mode', state.selectMode); updateToolbar(); renderMainView(); }
+  if(e.key==='n' || e.key==='N'){ e.preventDefault(); openMedModal(null); return; }
+  if((e.ctrlKey||e.metaKey) && e.key.toLowerCase()==='z'){ e.preventDefault(); history.doUndo(); return; }
+  if((e.ctrlKey||e.metaKey) && (e.key.toLowerCase()==='y' || (e.shiftKey && e.key.toLowerCase()==='z'))){ e.preventDefault(); history.doRedo(); return; }
+  if(e.key==='Delete' && state.selectMode && state.selected.size){ e.preventDefault(); deleteMeds([...state.selected]); return; }
+  if(e.key.toLowerCase()==='m'){ e.preventDefault(); state.selectMode=!state.selectMode; document.body.classList.toggle('select-mode', state.selectMode); updateToolbar(); renderMainView(); }
 });
 
 // ====== Inicializar datos si vacío ======
