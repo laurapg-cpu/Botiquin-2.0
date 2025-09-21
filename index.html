@@ -454,7 +454,7 @@ const els={
   btnNotify:$('#btnNotify'), btnSelectMode:$('#btnSelectMode'), btnDeleteSelected:$('#btnDeleteSelected'),
   btnMenu:$('#btnMenu'), btnCloseMenu:$('#btnCloseMenu'),
   btnTrash:$('#btnTrash'), btnEmptyTrash:$('#btnEmptyTrash'),
-  **btnNewFolder: $('#btnNewFolder')**   // 👈 añadir esta línea
+  btnNewFolder: $('#btnNewFolder')
 };
 
 
@@ -924,7 +924,7 @@ els.btnTheme.addEventListener('click',()=>{
   applyTheme(THEMES[i]); save();
 });
 els.btnNewMed.addEventListener('click',()=>openMedModal(null));
-**els.btnNewFolder.addEventListener('click',()=>openFolderModal(null));**  // 👈 añadir
+els.btnNewFolder.addEventListener('click',()=>openFolderModal(null));
 els.btnTrash.addEventListener('click',openTrash);
 els.btnEmptyTrash.addEventListener('click',()=>{ if(confirmBox('¿Vaciar papelera?')){ state.trash.meds=[]; save(); }});
 
