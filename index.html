@@ -608,15 +608,7 @@ function renderCards(meds, isList=false){
     // Botones
     card.querySelector('.btn-edit').addEventListener('click',()=>openMedModal(id));
     card.querySelector('.btn-del').addEventListener('click',()=>deleteMeds([id]));
-            // Quitar foto
-    card.querySelectorAll('.thumb .x').forEach(btn=>btn.addEventListener('click',()=>{
-      const i=parseInt(btn.parentElement.getAttribute('data-i'),10);
-      const m=state.meds.find(x=>x.id===id); if(!m) return;
-      history.push();
-      (m.photos||[]).splice(i,1);
-      m.updated=Date.now();
-      save(); renderMainView();
-    }));
+            
   });
 }
 
