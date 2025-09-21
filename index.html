@@ -437,6 +437,13 @@ load();
 })();
 
 // ====== Acceso a elementos ======
+function showBackdrop(show){
+  if(show){
+    els.backdrop.classList.add('show');
+  }else{
+    els.backdrop.classList.remove('show');
+  }
+}
 const els={
   folderList:$('#folderList'), sidebar:$('#sidebar'), backdrop:$('#backdrop'),
   viewSelect:$('#viewSelect'), sortSelect:$('#sortSelect'), searchInput:$('#searchInput'),
