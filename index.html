@@ -754,9 +754,14 @@ function openMedModal(id){
     med.folderId='arch';
     med.archived=true;
     med.updated=Date.now();
-    if(isNew) state.meds.push(med);
-    modal.classList.remove('open'); showBackdrop(false);
-    save(); renderAll();
+    if(isNew){
+  state.meds.push(med);
+} else {
+  const idx = state.meds.findIndex(x=>x.id===med.id);
+  if(idx>=0) state.meds[idx] = med;  // <<-- asegura actualización
+}
+modal.classList.remove('open'); showBackdrop(false);
+save(); renderAll();
   };
   $('#btnCancelEdit').onclick = ()=>{ modal.classList.remove('open'); showBackdrop(false); };
   $('#closeMedModal').onclick = ()=>{ modal.classList.remove('open'); showBackdrop(false); };
